@@ -27,6 +27,13 @@ for (const t of thoughts) {
   if (!m) continue;
   const parent = ideas.find((i) => i.number === Number(m[1]));
   if (!parent) continue;
+  // nest the thought under its idea (GitHub sub-issues; idempotent)
+  const subs = JSON.parse(sh(`gh api repos/${REPO}/issues/${parent.number}/sub_issues --jq "[.[].number]"`));
+  if (!subs.includes(t.number)) {
+    const subId = sh(`gh api repos/${REPO}/issues/${t.number} --jq .id`);
+    sh(`gh api repos/${REPO}/issues/${parent.number}/sub_issues -X POST -F sub_issue_id=${subId}`);
+    console.log(`nested thought #${t.number} under idea #${parent.number}`);
+  }
   const ref = `[#${t.number}]`;
   if (parent.body.includes(ref)) continue; // already merged (agent or earlier run)
   const gist = (
