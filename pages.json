@@ -1,3 +1,11 @@
 [
-  { "file": "trading-bot.html", "title": "Trading bot", "desc": "A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.", "date": "2026-08-29", "emoji": "🤖", "status": "open", "issue": "#1" }
+  {
+    "file": "trading-bot.html",
+    "title": "Trading bot",
+    "desc": "A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.",
+    "date": "2026-08-29",
+    "emoji": "🤖",
+    "status": "open",
+    "issue": "#1"
+  }
 ]
