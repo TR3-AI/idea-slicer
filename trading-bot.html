@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading bot — idea map</title>
+<style>
+  :root {
+    --bg: #0b0f17;
+    --card: #131a26;
+    --card2: #182236;
+    --line: #243149;
+    --ink: #e8eef7;
+    --dim: #93a3ba;
+    --acc1: #5b8cff;
+    --acc2: #36c6a0;
+    --acc3: #f2a24b;
+    --acc4: #c97bf0;
+    --acc5: #f2677e;
+    --amber: #f2c94b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 28px; }
+  h1 {
+    font-size: 30px; font-weight: 800; letter-spacing: -.5px;
+    background: linear-gradient(90deg, var(--acc1), var(--acc2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--dim); margin-top: 6px; font-size: 14px; }
+  .stamp { color: var(--dim); font-size: 12px; margin-top: 4px; opacity: .7; }
+
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--dim); margin: 34px 0 12px;
+  }
+
+  /* ── "This idea needs" strip ───────────────────────── */
+  .needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .needs .pill {
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .needs .pill b { color: var(--acc2); margin-right: 6px; }
+  .needs .arr { color: var(--dim); font-weight: 700; }
+
+  /* ── department cards ──────────────────────────────── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .dept {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px 18px; border-top: 3px solid var(--acc1);
+  }
+  .dept:nth-child(5n+2) { border-top-color: var(--acc2); }
+  .dept:nth-child(5n+3) { border-top-color: var(--acc3); }
+  .dept:nth-child(5n+4) { border-top-color: var(--acc4); }
+  .dept:nth-child(5n+5) { border-top-color: var(--acc5); }
+  .dept h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .dept .why { color: var(--dim); font-size: 13px; margin-bottom: 12px; }
+  .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--dim); margin: 10px 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 3px 9px; font-size: 12.5px; color: var(--ink);
+  }
+  .chip.dep { border-color: var(--acc3); color: var(--acc3); background: transparent; }
+  .chip.none { color: var(--dim); font-style: italic; }
+  ol.steps { margin-left: 20px; font-size: 14px; }
+  ol.steps li { margin: 4px 0; }
+  ol.steps li::marker { color: var(--acc2); font-weight: 700; }
+
+  /* ── diagram ───────────────────────────────────────── */
+  .diagram {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 18px; overflow-x: auto;
+  }
+  .mermaid { display: flex; justify-content: center; min-width: 320px; }
+
+  /* ── unsorted ──────────────────────────────────────── */
+  .unsorted .item {
+    background: rgba(242, 201, 75, .07); border: 1px dashed rgba(242, 201, 75, .4);
+    border-radius: 10px; padding: 10px 14px; margin: 8px 0; font-size: 14px;
+  }
+  .unsorted .item span { color: var(--amber); }
+  .unsorted .why { display: block; color: var(--dim); font-size: 12.5px; margin-top: 2px; }
+
+  footer { text-align: center; color: var(--dim); font-size: 12px; margin-top: 40px; opacity: .7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Trading bot</h1>
+    <div class="sub">A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.</div>
+    <div class="stamp">idea-slicer · updated 2026-08-29 · status: open · issue #1</div>
+  </header>
+
+  <h2>This idea needs — in order</h2>
+  <div class="needs">
+    <span class="pill"><b>1</b>Broker connection (API keys + integration)</span><span class="arr">→</span><span class="pill"><b>2</b>Order engine (placement, stop-loss, TP)</span><span class="arr">→</span><span class="pill"><b>3</b>Position tracker</span><span class="arr">→</span><span class="pill"><b>4</b>Front-end UI</span>
+  </div>
+
+  <h2>Departments — run in parallel</h2>
+  <div class="grid">
+    
+<div class="dept">
+  <h3>Broker connection</h3>
+  <div class="why">Everything talks to the exchange through this team.</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">API keys</span><span class="chip">API integration</span></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Get API keys for the exchange (keys = the password that lets code trade on your account)</li><li>Wrap the exchange API in one client module — one place for auth, rate limits, retries</li><li>Prove it: fetch account balance and live price</li></ol>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip none">nothing — starts day one</span></div>
+</div>
+
+<div class="dept">
+  <h3>Order engine</h3>
+  <div class="why">The only department allowed to create, change, or cancel orders.</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">Order placement</span><span class="chip">Stop-loss</span><span class="chip">Dynamic TP</span></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Place a basic market/limit order through the broker client</li><li>Attach a stop-loss (auto-sell if price drops to a level you set, capping the loss)</li><li>Attach a dynamic TP (take-profit: auto-sell to lock gains; "dynamic" = the level trails the price instead of sitting fixed)</li></ol>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">Broker connection</span></div>
+</div>
+
+<div class="dept">
+  <h3>Position tracker</h3>
+  <div class="why">Single source of truth for what is open right now.</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">Tracking open positions</span></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Subscribe to fill events from the broker client</li><li>Keep a live table of open positions: size, entry, current P&amp;L</li><li>Reconcile with the exchange on startup and on a timer</li></ol>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">Broker connection</span></div>
+</div>
+
+<div class="dept">
+  <h3>Front-end UI</h3>
+  <div class="why">The dashboard; read-only views plus buttons that call the order engine.</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">Front end</span></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Show open positions live from the tracker</li><li>Order form with stop-loss + dynamic TP fields</li><li>Manual close button routed through the order engine</li></ol>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">Order engine</span><span class="chip dep">Position tracker</span></div>
+</div>
+  </div>
+
+  <h2>Flow — who hands what to whom</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  subgraph BROKER["1 · Broker connection"]
+    B1["API keys"] --> B2["API client: auth, retries, rate limits"]
+  end
+  subgraph ENGINE["2 · Order engine"]
+    E1["Place / cancel orders"] --> E2["Stop-loss"] --> E3["Dynamic TP"]
+  end
+  subgraph TRACK["3 · Position tracker"]
+    T1["Listen for fills"] --> T2["Live open-positions table"]
+  end
+  subgraph UI["4 · Front-end UI"]
+    U1["Positions view"] --> U2["Order form + close button"]
+  end
+  B2 ==> E1
+  B2 ==> T1
+  E3 ==> U2
+  T2 ==> U1
+    </pre>
+  </div>
+
+  <h2>Unsorted — parked, not lost</h2>
+  <div class="unsorted">
+    
+<div class="item"><span>"backtesting??"</span><span class="why">Not placed yet — could be its own Strategy department, or a mode of the order engine. Needs one more thought to decide.</span></div>
+  </div>
+
+  <footer>Living map — regenerated on every new thought. Source of truth: map.md next to this file.</footer>
+</div>
+
+<script src="nav.js" defer></script>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "dark",
+    securityLevel: "loose",
+    flowchart: { curve: "basis", htmlLabels: true, nodeSpacing: 40, rankSpacing: 55 },
+    themeVariables: {
+      background: "#131a26",
+      primaryColor: "#182236",
+      primaryBorderColor: "#5b8cff",
+      primaryTextColor: "#e8eef7",
+      lineColor: "#5b8cff",
+      clusterBkg: "#0f1520",
+      clusterBorder: "#243149",
+      edgeLabelBackground: "#182236"
+    }
+  });
+</script>
+</body>
+</html>
