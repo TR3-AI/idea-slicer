@@ -60,6 +60,7 @@ Steps:
 3. Manual close button routed through the order engine
 
 ## Unsorted
+- max position size — never risk more than 2% of the account on a single trade [#2] — arrived via GitHub, not yet sliced — run /idea-slicer to place it
 - backtesting?? — could be its own Strategy department, or a mode of the order engine. Needs one more thought to decide.
 
 ## Diagram
