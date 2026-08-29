@@ -112,7 +112,7 @@ function renderHtml(p, issue) {
 
 // ── 4. rebuild pages + manifest ──
 for (const f of fs.readdirSync(".")) {
-  if (f.endsWith(".html") && f !== "index.html" && fs.readFileSync(f, "utf8").includes(MARKER))
+  if (f.endsWith(".html") && f !== "index.html" && f !== "template.html" && fs.readFileSync(f, "utf8").includes(MARKER))
     fs.unlinkSync(f); // stale generated page (renamed/deleted idea)
 }
 fs.mkdirSync("maps", { recursive: true });
