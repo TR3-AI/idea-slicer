@@ -1,6 +1,7 @@
 # Trading bot
 Status: open
 Updated: 2026-08-29
+Emoji: 🤖
 
 A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.
 
