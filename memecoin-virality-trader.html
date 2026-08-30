@@ -271,6 +271,7 @@ flowchart TD
 <div class="item"><span>Execution venue</span><span class="why">external dependency choice: which exchange/DEX the Position manager trades on; possibly reuses the Trading bot idea's broker connection (issue #1)</span></div>
 <div class="item"><span>Moon bag size</span><span class="why">owner-supplied input: how much remains when the 15% ladder stops</span></div>
 <div class="item"><span>Exit-divergence rules</span><span class="why">contract question: do the same two-leg rules qualify a bearish divergence while holding, or a looser set?</span></div>
+<div class="item"><span>Kelly inputs</span><span class="why">owner-supplied input + contract gap: fractional Kelly needs three things no department currently produces — the bankroll figure it sizes against, an estimated win probability and payoff (from backtest results or a fixed assumption), and the chosen fraction (half-Kelly? quarter?). Position manager cannot size a trade until these are pinned</span></div>
   </div>
 
   <h2>📥 Unsorted — parked, not lost</h2>

@@ -152,6 +152,7 @@ MEMECOIN TRADER
 - Execution venue — external dependency choice: which exchange/DEX the Position manager trades on; possibly reuses the Trading bot idea's broker connection (issue #1)
 - Moon bag size — owner-supplied input: how much remains when the 15% ladder stops
 - Exit-divergence rules — contract question: do the same two-leg rules qualify a bearish divergence while holding, or a looser set?
+- Kelly inputs — owner-supplied input + contract gap: fractional Kelly needs three things no department currently produces — the bankroll figure it sizes against, an estimated win probability and payoff (from backtest results or a fixed assumption), and the chosen fraction (half-Kelly? quarter?). Position manager cannot size a trade until these are pinned
 
 ## Unsorted
 - —
