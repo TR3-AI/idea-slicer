@@ -100,9 +100,12 @@
   .sline .sic { flex: 0 0 auto; font-size: 14px; }
   .sline.sec { font-weight: 800; }
   .sline.mod .sname {
-    background: var(--lav); border: 1.5px solid #d9ccf7; border-radius: 8px;
-    padding: 2px 9px; font-weight: 700; color: var(--purple);
+    background: var(--lav); border: 2px solid #c9b8f2; border-radius: 8px;
+    padding: 3px 10px; font-weight: 800; font-size: 14px; color: var(--purple);
   }
+  .modstrip .pill { border-color: #d9ccf7; }
+  .modstrip .mname { color: var(--purple); }
+  .modstrip .mdept { color: var(--faint); font-weight: 600; font-size: 12px; }
   .sline.mod .mtype { font-size: 10.5px; color: var(--faint); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
   .sline.feat { color: var(--soft); }
   .sline.d1 { margin-left: 0; }
@@ -184,202 +187,320 @@
 
   <header>
     <h1>Memecoin virality trader</h1>
-    <div class="sub"></div>
-    <div class="reco"></div>
-    <div class="stamp">idea-slicer · updated 2026-08-30 · status: open · issue #4</div>
+    <div class="sub">Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a viral tweet, a high Grok score, clean bundlers, and a chart breakout with divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.</div>
+    <div class="reco">8 departments, 10 sections, 7 genuine modules</div>
+    <div class="stamp">idea-slicer · updated 2026-08-30 · status: open · issue #4 · greenfield</div>
   </header>
 
   <h2>🧭 This idea needs — in order</h2>
   <div class="needs">
-    <span class="pill"><b>1</b>Virality scoring gate</span><span class="arr">→</span><span class="pill"><b>2</b>Watch monitoring</span><span class="arr">→</span><span class="pill"><b>3</b>Pattern detection</span><span class="arr">→</span><span class="pill"><b>4</b>Divergence validation</span><span class="arr">→</span><span class="pill"><b>5</b>Position management</span><span class="arr">→</span><span class="pill"><b>6</b>Full logging</span>
+    <span class="pill"><b>1</b>Callout intake (pump.fun / FOMO sources)</span><span class="arr">→</span><span class="pill"><b>2</b>Virality scorer (30-day baseline + multiplier gate)</span><span class="arr">→</span><span class="pill"><b>3</b>Narrative analysis (Grok 4.6, combined score &gt; 8)</span><span class="arr">→</span><span class="pill"><b>4</b>Bundler checker (strict ≤10–15% rule)</span><span class="arr">→</span><span class="pill"><b>5</b>Signal &amp; trigger (pattern + divergence + 30% stop)</span><span class="arr">→</span><span class="pill"><b>6</b>Trade executor (Solana, sell-into-volume)</span><span class="arr">→</span><span class="pill"><b>7</b>Position manager (2x rule, moon bag, clip ladder)</span><span class="arr">→</span><span class="pill"><b>8</b>Trade journal (every gate + fill logged)</span>
   </div>
 
   <h2>🎬 Operating flow — how the finished system runs</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
-  A[No operating flow yet]
+  A["📣 Callout arrives — tracked trader/dev calls a coin<br>on pump.fun or FOMO (web + mobile)"] --> B{"⏱️ Tweet posted within<br>1 hour of coin creation?"}
+  B -- "❌ Older" --> R1["🚫 Reject — log reason"]
+  B -- "✅ Within 1h" --> C["📊 Build 30-day baseline:<br>capture every tweet, average likes + retweets"]
+  C --> D{"✖️ Multiplier — this tweet vs baseline<br>≥ 3x? (threshold customizable)"}
+  D -- "❌ Below" --> R2["🚫 Reject — log reason"]
+  D -- "✅ ≥ 3x — potential runner" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, veracity score,<br>attention score via X search"]
+  E --> F{"🧮 Combined score<br>> 8?"}
+  F -- "❌ ≤ 8" --> R3["🚫 Reject — log reason"]
+  F -- "✅ > 8" --> G["🧬 Bundler check:<br>% share of supply + trend (down / flat / up)"]
+  G --> H{"🚫 Bundlers<br>> 10–15%?"}
+  H -- "❌ Too many" --> R4["🚫 Reject — log reason"]
+  H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>pennant or descending triangle forming"]
+  I --> J{"💥 Breakout + OBV and/or RSI<br>divergence inside the pattern?"}
+  J -- "⏳ Not yet" --> I
+  J -- "✅ Trigger" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
+  K --> L{"📈 Price reaches<br>2x?"}
+  L -- "⏳" --> L
+  L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
+  M --> N["🌙 20% of remaining profit → moon bag<br>(never auto-sold — manual only)"]
+  N --> O{"🔀 OBV or RSI divergence<br>(ideally both)?"}
+  O -- "⏳ No" --> O
+  O -- "✅ Yes" --> P{"🟢 Buy pressure?<br>green candle + volume"}
+  P -- "❌ Wait" --> P
+  P -- "✅ Sell into volume" --> Q["✂️ Clip 15–20% of remaining 80%"]
+  Q --> S{"Position flat<br>(moon bag aside)?"}
+  S -- "❌" --> O
+  S -- "✅" --> T["🧾 Log result — trade complete"]
+  D -.->|"⚠️ >50x rule: action cut off in spec — see Unresolved"| E
     </pre>
   </div>
 
   <h2>🗂️ Departments — by parallel readiness</h2>
   <div class="bucket"><div class="bucket-head b-now">▶️ Can start in parallel now</div><div class="grid">
 <div class="dept">
-  <h3><span class="dicon">📈</span>Virality scorer</h3>
-  <div class="chips"><span class="chip state">✅ ready</span></div>
-  <div class="why">One pipeline that takes a call from &quot;someone called it&quot; to &quot;qualified or dropped&quot; — intake and scoring share the coin's lifecycle, so they stay together.</div>
-  
-  
-  
+  <h3><span class="dicon">📣</span>Callout intake</h3>
+  <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
+  <div class="why">Detect and normalize every callout from the tracked traders/devs into one candidate shape the pipeline can score.</div>
+  <div class="kv"><b>Starts when:</b> the tracked-source list is configured (owner-supplied)</div>
+  <div class="kv"><b>Completes when:</b> a normalized candidate (coin address, attached tweet, callout timestamp, source) streams in real time</div>
+  <div class="kv boundary"><b>Boundary:</b> owns source adapters and normalization; does not own scoring or trading</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">vetted-source calls</span><span class="chip">tweet check</span><span class="chip">ScrapingDog 30-day baseline</span><span class="chip">virality multiplier</span><span class="chip">Grok combined score</span><span class="chip">6.5/8 threshold gate</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Intake</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">vetted-source listener</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Scoring</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">tweet baseline engine</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">ScrapingDog 30-day baseline</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">virality multiplier</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">Grok combined score</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Gate</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">6.5 / 8 threshold rule</span></div></div>
+  <div class="chips"><span class="chip">callout tracking</span><span class="chip">pump.fun / FOMO sources</span><span class="chip">web + mobile ingestion</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Source adapters</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">callout listener</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">candidate normalizer</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Listen for calls from vetted sources (a vetted source = a caller or group Bobby has pre-approved)</li><li>Check if the call has a tweet attached</li><li>If there is a tweet: pull a 30-day baseline via ScrapingDog (a web-scraping API) and compute the virality multiplier — how far engagement is running above its own normal</li><li>Send coin data plus the multiplier to Grok (xAI's model, used here as the scoring brain) for a combined score</li><li>Gate: 6.5+ with a tweet, 8+ without → promote to watch; otherwise drop the coin</li></ol>
-  
-  
+  <ol class="steps"><li>Configure the tracked traders/devs list (which callers count — owner input)</li><li>Listen on pump.fun and FOMO channels (web + mobile sources)</li><li>Normalize each callout: coin address, attached tweet, timestamp, source</li><li>Emit the candidate to the Virality scorer</li></ol>
+  <div class="kv"><b>Inputs:</b> tracked-source list (owner), callout streams (external)</div>
+  <div class="kv"><b>Outputs:</b> normalized candidate → Virality scorer</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip none">nothing — starts day one</span></div>
-</div></div></div>
-<div class="bucket"><div class="bucket-head b-after-contract">📝 Can start in parallel after contract definition</div><div class="grid">
+</div>
+
 <div class="dept">
-  <h3><span class="dicon">👁️</span>Watch monitor</h3>
-  <div class="chips"><span class="chip state">📝 contract required</span></div>
-  <div class="why">Owns the surveillance phase: is this coin's holder base healthy enough to keep watching?</div>
-  
-  
-  
+  <h3><span class="dicon">📊</span>Virality scorer</h3>
+  <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
+  <div class="why">Decide whether the callout's tweet is abnormally hot versus its own history — the tweet/coin qualification gate.</div>
+  <div class="kv"><b>Starts when:</b> a normalized candidate arrives</div>
+  <div class="kv"><b>Completes when:</b> candidates are passed (viable + ≥3x) or rejected with a logged reason</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the 30-day baseline and multiplier math; does not own narrative judgment or chart work</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">holder quality (bundlers</span><span class="chip">snipers</span><span class="chip">reduction trend)</span><span class="chip">age-based chart timeframe</span><span class="chip">monitor until setup or death</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Holder quality</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">holder analyzer</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">bundler detection</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">sniper detection</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">reduction trend</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Surveillance</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">age-based chart timeframe</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">setup-or-death loop</span></div></div>
+  <div class="chips"><span class="chip">30-day baseline</span><span class="chip">virality multiplier</span><span class="chip">customizable threshold</span><span class="chip">1-hour viability window</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Baseline engine</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">30-day baseline calculator</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">1-hour viability check</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">multiplier threshold (configuration value)</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Pin the contract with Virality scorer: the qualified-coin payload (coin ID, score, tweet data)</li><li>Check holder quality: bundlers (wallets that bought in the same block as launch), snipers (bots that buy in the first seconds), and the reduction trend (are early wallets selling off?)</li><li>Open the chart on the age-based timeframe (candle size matched to how old the coin is)</li><li>Keep monitoring: hand the coin on when a setup starts forming, or drop it if it dies</li></ol>
-  
-  
+  <ol class="steps"><li>Gate 1 — tweet age: reject if the tweet is older than 1 hour after coin creation</li><li>Capture every tweet from the last 30 days, average likes + retweets into a baseline</li><li>Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)</li><li>Gate 2 — multiplier ≥ threshold (3x to start; customizable in config)</li><li>Implement the &gt;50x rule once Bobby completes it (see Unresolved)</li></ol>
+  <div class="kv"><b>Inputs:</b> normalized candidate (Callout intake), tweet metrics (X API — external)</div>
+  <div class="kv"><b>Outputs:</b> qualified candidate + multiplier → Narrative analysis</div>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">Callout intake</span></div>
+</div>
+
+<div class="dept">
+  <h3><span class="dicon">🧠</span>Narrative analysis</h3>
+  <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
+  <div class="why">Judge what the coin *is* and whether the attention is real — the AI scoring gate.</div>
+  <div class="kv"><b>Starts when:</b> a ≥3x candidate arrives</div>
+  <div class="kv"><b>Completes when:</b> a combined score (&gt;8 pass / ≤8 reject) is attached with narrative + thesis</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the Grok prompt, the five extracted scores, and the combine rule; does not own raw tweet collection</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">pre-generated prompt</span><span class="chip">narrative</span><span class="chip">thesis</span><span class="chip">sentiment</span><span class="chip">veracity score</span><span class="chip">attention score</span><span class="chip">combined score</span><span class="chip">&gt;8 gate</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Grok scoring</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">Grok adapter</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">score combiner</span></div></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt</li><li>Extract: narrative, thesis, sentiment, veracity score (tweet vs baseline), attention score (X search across Twitter)</li><li>Combine into one score</li><li>Gate 3 — combined score &gt; 8 → pass; otherwise reject and log</li></ol>
+  <div class="kv"><b>Inputs:</b> qualified candidate (Virality scorer), Grok 4.6 API (external, owner account)</div>
+  <div class="kv"><b>Outputs:</b> scored candidate → Bundler checker</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Virality scorer</span></div>
 </div>
 
 <div class="dept">
-  <h3><span class="dicon">📐</span>Pattern engine</h3>
-  <div class="chips"><span class="chip state">📝 contract required</span></div>
-  <div class="why">Pure chart-geometry team: finds the setup and fires the breakout event. Nothing else draws on charts.</div>
-  
-  
-  
+  <h3><span class="dicon">🧬</span>Bundler checker</h3>
+  <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
+  <div class="why">Verify the coin's holder base isn't rigged — the strict bundler gate.</div>
+  <div class="kv"><b>Starts when:</b> a &gt;8 candidate arrives</div>
+  <div class="kv"><b>Completes when:</b> bundler % + trend are attached; coins over the limit are rejected with a logged reason</div>
+  <div class="kv boundary"><b>Boundary:</b> owns bundler data and the trend call; does not own chart or narrative work</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">descending triangle / pennant detection</span><span class="chip">pattern start marking</span><span class="chip">breakout wait</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Chart patterns</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">pattern detector</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">descending triangle</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">pennant</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">pattern start marker</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">breakout watcher</span></div></div>
+  <div class="chips"><span class="chip">bundler % share</span><span class="chip">trend direction (down / flat / up)</span><span class="chip">≤10–15% strict rule</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Holder verification</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">bundler data adapter</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">trend classifier</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Pin the contract with Watch monitor: the watch-list feed (live coins plus chart data)</li><li>Detect a descending triangle or a pennant (both = price squeezing into a tighter range before a move)</li><li>Mark the pattern start — all later divergence checks only look inside this window</li><li>Wait for the breakout (price leaving the pattern) and emit a breakout event</li></ol>
-  
-  
+  <ol class="steps"><li>Pull the bundler share: wallets that bought in the creation block and their supply %</li><li>Read the full block and exclude program-owned accounts (the bonding curve) — tools disagree on this number, so the counting method is pinned here</li><li>Classify the trend: decreasing, stagnating, or increasing (0% ideal)</li><li>Gate 4 — strict: reject anything over 10–15% bundlers (below 10% preferred), especially if increasing</li></ol>
+  <div class="kv"><b>Inputs:</b> scored candidate (Narrative analysis), bundler data (chain analytics — external)</div>
+  <div class="kv"><b>Outputs:</b> clean candidate → Signal &amp; trigger</div>
   <div class="lbl">Needs from</div>
-  <div class="chips"><span class="chip dep">Watch monitor</span></div>
-</div>
-
-<div class="dept">
-  <h3><span class="dicon">🔀</span>Divergence validator</h3>
-  <div class="chips"><span class="chip state">📝 contract required</span></div>
-  <div class="why">The only department that compares price against oscillators — both for the entry check and for exit warnings while holding.</div>
-  
-  
-  
-  <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">two-leg divergence check</span><span class="chip">pivot 1 &amp; 2 detection</span><span class="chip">price vs OBV/RSI comparison</span><span class="chip">recurring bearish-divergence flags</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Two-leg divergence</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">pivot finder</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">price vs OBV/RSI comparator</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">bearish-divergence flagger</span></div></div>
-  <div class="lbl">Steps</div>
-  <ol class="steps"><li>Pin the contract with Pattern engine: pattern window plus breakout event</li><li>On breakout, look only inside the pattern for a two-leg divergence: find pivot 1 and pivot 2 (swing points)</li><li>Compare price vs OBV (on-balance volume = running total of volume direction) or RSI (relative strength index = momentum gauge) across the two pivots</li><li>Valid divergence → emit an entry signal; invalid → pass on the coin</li><li>While a position is open, keep flagging qualifying bearish divergences (price makes a higher high, the oscillator doesn't) as exit signals</li></ol>
-  
-  
-  <div class="lbl">Needs from</div>
-  <div class="chips"><span class="chip dep">Pattern engine</span></div>
+  <div class="chips"><span class="chip dep">Narrative analysis</span></div>
 </div>
 
 <div class="dept">
   <h3><span class="dicon">📓</span>Trade journal</h3>
-  <div class="chips"><span class="chip state">📝 contract required</span></div>
-  <div class="why">Everything logged, one place: scores, gate decisions, watch events, signals, fills.</div>
-  
-  
-  
+  <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
+  <div class="why">One queryable record of everything — every gate decision, score, watch event, signal, and fill.</div>
+  <div class="kv"><b>Starts when:</b> the log schema contract is pinned</div>
+  <div class="kv"><b>Completes when:</b> any coin or trade can be replayed end to end from the log</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the log schema and storage; does not own the events themselves</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">full event logging</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Event log</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">journal logger</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">per-coin / per-trade queries</span></div></div>
+  <div class="chips"><span class="chip">gate decisions</span><span class="chip">scores</span><span class="chip">watch events</span><span class="chip">signals</span><span class="chip">fills</span><span class="chip">per-coin and per-trade queries</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Event log</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">per-coin / per-trade queries</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Pin the log schema contract (event types and fields) that every other department writes against</li><li>Record scores, gate decisions, watch events, entry/exit signals, and every fill</li><li>Make the log queryable per coin and per trade</li></ol>
-  
-  
+  <ol class="steps"><li>Pin the log schema contract (event types and fields) that every department writes against</li><li>Record scores, gate accept/reject reasons, watch events, entry/exit signals, and every fill</li><li>Make the log queryable per coin and per trade</li></ol>
+  <div class="kv"><b>Inputs:</b> events from every department (shared foundation)</div>
+  <div class="kv"><b>Outputs:</b> replayable history → Bobby, debugging, future backtesting</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">nothing — every department writes to it</span></div>
 </div></div></div>
-<div class="bucket"><div class="bucket-head b-waiting">⏳ Must wait for another department</div><div class="grid">
+<div class="bucket"><div class="bucket-head b-after-contract">📝 Can start in parallel after contract definition</div><div class="grid">
 <div class="dept">
-  <h3><span class="dicon">💼</span>Position manager</h3>
-  <div class="chips"><span class="chip state">⏳ waiting on internal</span></div>
-  <div class="why">Owns the whole position lifecycle from sizing to the moon bag — entry, stop, and scale-outs share state and a transaction boundary, so they are one team.</div>
-  
-  
-  
+  <h3><span class="dicon">📈</span>Signal &amp; trigger</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
+  <div class="why">Watch clean candidates' charts and fire the entry only when pattern and divergence agree. One team, because the divergence check only counts inside the pattern window — shared state.</div>
+  <div class="kv"><b>Starts when:</b> the qualified-candidate contract is frozen</div>
+  <div class="kv"><b>Completes when:</b> a validated entry signal fires (pattern + breakout + divergence) or the coin dies unwatched</div>
+  <div class="kv boundary"><b>Boundary:</b> owns chart geometry and oscillators; does not own order execution</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">fractional Kelly sizing</span><span class="chip">entry</span><span class="chip">30% stop</span><span class="chip">2X capital recovery</span><span class="chip">15% divergence scale-outs</span><span class="chip">moon bag handoff</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Entry</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">fractional Kelly sizer</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">30% stop</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Exit ladder</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">2X capital recovery</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">15% divergence scale-out</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">moon bag handoff</span></div></div>
+  <div class="chips"><span class="chip">pennant / descending-triangle detection</span><span class="chip">breakout watch</span><span class="chip">OBV divergence</span><span class="chip">RSI divergence</span><span class="chip">entry trigger</span><span class="chip">immediate 30% stop rule</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Setup watcher</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">chart setup detector</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">entry trigger + 30% stop</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Pin the contract with Divergence validator: entry-signal and exit-signal shapes</li><li>Size the entry with fractional Kelly (Kelly = a formula for optimal bet size from win rate and odds; fractional = deliberately use only a slice of it, safer)</li><li>Enter and set a 30% stop (auto-sell if price falls 30% below entry, capping the loss)</li><li>At 2X: sell enough to recover the initial capital and cancel the stop — from here it's house money</li><li>On each qualifying bearish divergence: sell about 15% of what's left; repeat until only the moon bag remains</li><li>Moon bag is manual — hand it off to Bobby and close out the managed position</li></ol>
-  
-  
+  <ol class="steps"><li>Pin the contract with Bundler checker: clean-candidate payload</li><li>Detect a pennant or descending triangle (price squeezing into a tighter range); prefer descending triangle</li><li>Mark the pattern start — divergence checks only count inside this window, never far back</li><li>Wait for the breakout; on breakout, confirm OBV divergence, RSI divergence, or both inside the pattern</li><li>Fire the entry signal with an immediate 30% stop-loss attached</li></ol>
+  <div class="kv"><b>Inputs:</b> clean candidate (Bundler checker), chart data OHLC + OBV/RSI (chart provider — external)</div>
+  <div class="kv"><b>Outputs:</b> trade intent (entry + 30% stop) → Trade executor; bearish divergences while holding → Position manager</div>
   <div class="lbl">Needs from</div>
-  <div class="chips"><span class="chip dep">Divergence validator</span></div>
+  <div class="chips"><span class="chip dep">Bundler checker</span></div>
+</div>
+
+<div class="dept">
+  <h3><span class="dicon">💰</span>Position manager</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
+  <div class="why">Run the fixed exit ladder from entry to flat — 2x rule, moon bag, and the clip strategy. One team because the ladder shares position state across every step.</div>
+  <div class="kv"><b>Starts when:</b> the first fill arrives from the Trade executor</div>
+  <div class="kv"><b>Completes when:</b> the position (moon bag aside) is flat and the result is logged</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the ladder and its state; does not own signal detection or transaction building</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">2x initial-capital recovery</span><span class="chip">20% moon bag rule</span><span class="chip">15–20% divergence clips</span><span class="chip">position state</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Exit ladder</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">exit ladder state machine</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">moon bag vault</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">divergence clipper</span></div></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Pin the contract with Trade executor: fill events and clip-order shape</li><li>At 2x: withdraw the initial capital — from here it is house money</li><li>Set aside 20% of the remaining profit as the moon bag (never auto-sold; manual at Bobby's discretion)</li><li>On each OBV/RSI divergence (ideally both): order a clip of 15–20% of the remaining 80%, routed through the executor's sell-into-volume filter</li><li>Repeat until flat; log the result and hand the moon bag to Bobby</li></ol>
+  <div class="kv"><b>Inputs:</b> fills (Trade executor), bearish divergences (Signal &amp; trigger), live price + volume (chart provider — shared foundation)</div>
+  <div class="kv"><b>Outputs:</b> clip orders → Trade executor; results → Trade journal; moon bag → Bobby (manual)</div>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">Trade executor</span></div>
 </div></div></div>
-  <div class="report">Departments: 10 candidates → 6 final (call intake folded into Virality scorer — one pipeline; Kelly sizing and scale-outs stay inside Position manager on shared-lifecycle grounds; tweet team and holder-quality team absorbed into scorer and watch monitor) · Modules: 4 candidates → 4 genuine (tweet baseline engine, holder analyzer, pattern detector, journal logger)</div>
+<div class="bucket"><div class="bucket-head b-blocked">🚧 Blocked by external or owner dependency</div><div class="grid">
+<div class="dept">
+  <h3><span class="dicon">⚡</span>Trade executor</h3>
+  <div class="chips"><span class="chip state">🚧 waiting on owner</span></div>
+  <div class="why">The only department that moves money — enters and exits on Solana, and only ever sells into buy pressure.</div>
+  <div class="kv"><b>Starts when:</b> Bobby supplies the Solana wallet + keys (owner dependency) and the trade-intent contract is frozen</div>
+  <div class="kv"><b>Completes when:</b> entries and exits fill correctly on devnet, including the sell-into-volume rule</div>
+  <div class="kv boundary"><b>Boundary:</b> owns transaction construction and fills; does not own when or why to trade</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">entries</span><span class="chip">exits</span><span class="chip">sell-into-volume filter (green candle + volume only)</span><span class="chip">fill reporting</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">On-chain execution</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">Solana execution adapter</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">sell-into-volume filter</span></div></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Receive the Solana wallet + keys from Bobby (referenced by secret name, never stored raw)</li><li>Execute the entry when a trade intent arrives</li><li>Execute exits only into buy pressure: green candles and real volume, never into red</li><li>Report every fill with price, size, and timestamp</li></ol>
+  <div class="kv"><b>Inputs:</b> trade intent (Signal &amp; trigger), clip orders (Position manager), wallet keys (owner)</div>
+  <div class="kv"><b>Outputs:</b> fills → Position manager, Trade journal</div>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">Signal &amp; trigger</span></div>
+</div></div></div>
+  <div class="report">Departments: 10 candidates → 8 final (pattern + divergence merged into Signal &amp; trigger — divergence only counts inside the pattern window, shared state; Kelly sizing demoted to Unsorted, not in the authoritative flow) · Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)</div>
+
+  <h2>🧩 Genuine modules — the real building blocks</h2>
+  <div class="needs modstrip">
+    <span class="pill">🧩 <span class="mname">callout listener</span> <span class="mdept">Callout intake · external-adapter</span></span><span class="pill">🧩 <span class="mname">30-day baseline calculator</span> <span class="mdept">Virality scorer · project-specific</span></span><span class="pill">🧩 <span class="mname">Grok adapter</span> <span class="mdept">Narrative analysis · external-adapter</span></span><span class="pill">🧩 <span class="mname">bundler data adapter</span> <span class="mdept">Bundler checker · external-adapter</span></span><span class="pill">🧩 <span class="mname">chart setup detector</span> <span class="mdept">Signal &amp; trigger · project-specific</span></span><span class="pill">🧩 <span class="mname">Solana execution adapter</span> <span class="mdept">Trade executor · external-adapter</span></span><span class="pill">🧩 <span class="mname">exit ladder state machine</span> <span class="mdept">Position manager · project-specific</span></span>
+  </div>
 
   <h2>🔀 Integration map — who hands what to whom</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
-  subgraph SCORE["📈 1 · Virality scorer"]
-    S1["📥 Vetted-source call"] --> S2["🐦 Tweet? → 30-day ScrapingDog baseline"]
-    S2 --> S3["✖️ Virality multiplier"]
-    S3 --> S4["🧠 Grok combined score"]
-    S4 --> S5["🚦 Gate: 6.5+ with tweet · 8+ without"]
+  subgraph INTAKE["📣 1 · Callout intake"]
+    I1["👂 Listen: pump.fun / FOMO"] --> I2["🧾 Normalize candidate"]
   end
-  subgraph WATCH["👁️ 2 · Watch monitor"]
-    W1["🔍 Holder quality: bundlers, snipers, reduction trend"] --> W2["📊 Age-based chart timeframe"]
-    W2 --> W3["⏳ Monitor until setup or death"]
+  subgraph SCORE["📊 2 · Virality scorer"]
+    V1["⏱️ 1h viability"] --> V2["📉 30-day baseline"] --> V3["✖️ Multiplier ≥ 3x"]
   end
-  subgraph PATTERN["📐 3 · Pattern engine"]
-    P1["📉 Detect descending triangle / pennant"] --> P2["📌 Mark pattern start"]
-    P2 --> P3["💥 Wait for breakout"]
+  subgraph GROK["🧠 3 · Narrative analysis"]
+    G1["🧠 Grok 4.6 prompt"] --> G2["🧮 Combined score > 8"]
   end
-  subgraph DIV["🔀 4 · Divergence validator"]
-    D1["🦵 Find pivots 1 & 2 — inside pattern only"] --> D2["⚖️ Two-leg divergence: price vs OBV / RSI"]
+  subgraph BUND["🧬 4 · Bundler checker"]
+    B1["🔍 % share + trend"] --> B2["🚫 ≤ 10–15% rule"]
   end
-  subgraph POS["💼 5 · Position manager"]
-    M1["🎲 Fractional Kelly sizing"] --> M2["🟢 Enter + 30% stop"]
-    M2 --> M3["✌️ At 2X: remove initial capital, cancel stop"]
-    M3 --> M4["📉 Sell 15% per bearish divergence"]
-    M4 --> M5["🌙 Moon bag — manual"]
+  subgraph SIG["📈 5 · Signal & trigger"]
+    T1["📐 Pattern watch"] --> T2["💥 Breakout + divergence"] --> T3["🟢 Entry + 30% stop"]
   end
-  subgraph LOG["📓 6 · Trade journal"]
-    L1["✍️ Log everything: scores, signals, fills"]
+  subgraph EXEC["⚡ 6 · Trade executor"]
+    X1["💥 Entries"] --> X2["🟢 Exits into volume only"]
   end
-  S5 ==> W1
-  W3 ==> P1
-  P3 ==> D1
-  D2 ==> M1
-  D2 -.->|bearish divergence| M4
-  S4 -.-> L1
-  W3 -.-> L1
-  M2 -.-> L1
-  M4 -.-> L1
+  subgraph POS["💰 7 · Position manager"]
+    P1["✌️ 2x: withdraw initial"] --> P2["🌙 20% moon bag"] --> P3["✂️ Clip 15–20% per divergence"]
+  end
+  subgraph LOG["📓 8 · Trade journal"]
+    L1["✍️ Log everything"]
+  end
+  I2 ==> V1
+  V3 ==> G1
+  G2 ==> B1
+  B2 ==> T1
+  T3 ==> X1
+  X2 ==> P1
+  T2 -.->|bearish divergence while holding| P3
+  V3 -.-> L1
+  G2 -.-> L1
+  B2 -.-> L1
+  X1 -.-> L1
+  P3 -.-> L1
     </pre>
   </div>
 
   <h2>🤝 Correlated parallel groups</h2>
-  <div class="group"><div class="members">No correlated groups identified yet.</div></div>
+  
+<div class="group">
+  <h4>Qualification gauntlet <span class="snap s4">4</span></h4>
+  <div class="members">👥 Callout intake + Virality scorer + Narrative analysis + Bundler checker · <b>frozen-contract</b></div>
+  <div class="kv"><b>Contract:</b> candidate schema + gate order + pass/fail payload</div>
+  <div class="kv"><b>Main risk:</b> four gates built with different assumptions about the candidate fields</div>
+</div>
+
+<div class="group">
+  <h4>Trigger &amp; execution <span class="snap s4">4</span></h4>
+  <div class="members">👥 Signal &amp; trigger + Trade executor · <b>frozen-contract</b></div>
+  <div class="kv"><b>Contract:</b> TradeIntent (entry + 30% stop) + idempotency rule</div>
+  <div class="kv"><b>Main risk:</b> slippage and timing on pump.fun entries — a stale trigger fires a bad fill</div>
+</div>
+
+<div class="group">
+  <h4>Exit management <span class="snap s5">5</span></h4>
+  <div class="members">👥 Trade executor + Position manager · <b>frozen-contract</b></div>
+  <div class="kv"><b>Contract:</b> fill-event schema</div>
+  <div class="kv"><b>Main risk:</b> a missed fill corrupts the ladder state (moon bag vs clip split goes wrong)</div>
+</div>
 
   <h2>🔗 Dependency matrix</h2>
   <div class="depswrap">
-    <p>No dependencies mapped yet.</p>
+    <table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr><tr><td class="who">Bobby</td><td class="who">Callout intake</td><td>tracked-source list (which traders/devs)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Bobby</td><td class="who">Trade executor</td><td>Solana wallet + keys (secret reference)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Bobby</td><td class="who">Narrative analysis</td><td>xAI API account (grok-4.6)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Bobby</td><td class="who">Virality scorer</td><td>X API access + multiplier threshold + &gt;50x rule decision</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="">no</td></tr>
+<tr><td class="who">pump.fun / FOMO</td><td class="who">Callout intake</td><td>callout stream</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">X API</td><td class="who">Virality scorer</td><td>30-day tweet metrics</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">xAI API</td><td class="who">Narrative analysis</td><td>narrative + scores</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Chain analytics</td><td class="who">Bundler checker</td><td>bundler % + trend</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Chart provider</td><td class="who">Signal &amp; trigger</td><td>OHLC + OBV/RSI</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Chart provider</td><td class="who">Position manager</td><td>live price + volume + divergences</td><td><span class="ttag t-shared-foundation">shared-foundation</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Callout intake</td><td class="who">Virality scorer</td><td>normalized candidate</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Virality scorer</td><td class="who">Narrative analysis</td><td>qualified candidate (viable + ≥3x)</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Narrative analysis</td><td class="who">Bundler checker</td><td>scored candidate (&gt;8)</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Bundler checker</td><td class="who">Signal &amp; trigger</td><td>clean candidate</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Signal &amp; trigger</td><td class="who">Trade executor</td><td>trade intent + 30% stop</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Trade executor</td><td class="who">Position manager</td><td>fills</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">All departments</td><td class="who">Trade journal</td><td>events</td><td><span class="ttag t-shared-foundation">shared-foundation</span></td><td class="no">no</td><td class="no">yes</td></tr></table>
   </div>
 
   <h2>🧲 Snap-together ranking — easiest first</h2>
-  <div class="snaprow"><span class="detail">No connections ranked yet.</span></div>
+  
+<div class="snaprow"><span class="snap s5">5</span><span class="conn">1. Trade executor → Position manager</span><span class="detail">fills feed the ladder directly through one event schema — <b>needs:</b> freeze the fill-event contract first</span></div>
+
+<div class="snaprow"><span class="snap s4">4</span><span class="conn">2. Signal &amp; trigger → Trade executor</span><span class="detail">one trade-intent object with the stop attached — <b>needs:</b> pin TradeIntent + idempotency rule</span></div>
+
+<div class="snaprow"><span class="snap s4">4</span><span class="conn">3. Virality scorer → Narrative analysis</span><span class="detail">candidate passes with its metrics attached — <b>needs:</b> freeze the candidate schema</span></div>
+
+<div class="snaprow"><span class="snap s3">3</span><span class="conn">4. Callout intake → Virality scorer</span><span class="detail">needs the normalized coin+tweet shape — <b>needs:</b> define the normalizer output</span></div>
+
+<div class="snaprow"><span class="snap s3">3</span><span class="conn">5. Narrative analysis → Bundler checker</span><span class="detail">pass-through plus the Grok scores — <b>needs:</b> extend the candidate schema</span></div>
+
+<div class="snaprow"><span class="snap s3">3</span><span class="conn">6. Bundler checker → Signal &amp; trigger</span><span class="detail">clean candidate with bundler verdict attached — <b>needs:</b> extend the candidate schema again</span></div>
+
+<div class="snaprow"><span class="snap s3">3</span><span class="conn">7. Chart provider → Signal &amp; trigger + Position manager</span><span class="detail">two consumers of one provider — <b>needs:</b> pick the provider early; it is a shared foundation</span></div>
 
   <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">
-    <div class="item"><span>Market &amp; on-chain data provider</span><span class="why">external dependency choice (Birdeye, Helius, Dexscreener…): supplies chart, OBV, and holder/bundler data; if it takes more than one API it may need its own Market data feed department — changes boundaries</span></div>
-<div class="item"><span>Vetted source list</span><span class="why">owner-supplied input: which callers or groups count as vetted; shapes the intake adapter</span></div>
-<div class="item"><span>ScrapingDog + Grok API keys</span><span class="why">owner-supplied input: scorer can't run without them</span></div>
-<div class="item"><span>Execution venue</span><span class="why">external dependency choice: which exchange/DEX the Position manager trades on; possibly reuses the Trading bot idea's broker connection (issue #1)</span></div>
-<div class="item"><span>Moon bag size</span><span class="why">owner-supplied input: how much remains when the 15% ladder stops</span></div>
-<div class="item"><span>Exit-divergence rules</span><span class="why">contract question: do the same two-leg rules qualify a bearish divergence while holding, or a looser set?</span></div>
-<div class="item"><span>Kelly inputs</span><span class="why">owner-supplied input + contract gap: fractional Kelly needs three things no department currently produces — the bankroll figure it sizes against, an estimated win probability and payoff (from backtest results or a fixed assumption), and the chosen fraction (half-Kelly? quarter?). Position manager cannot size a trade until these are pinned</span></div>
+    <div class="item"><span>The &gt;50x multiplier rule is cut off in the spec (&quot;whether the coin is traded 24 hours later makes no difference, we still…&quot;)</span><span class="why">material: could add an auto-qualify bypass around the Grok gate; Bobby to complete the rule</span></div>
+<div class="item"><span>Bundler data provider choice</span><span class="why">external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract</span></div>
+<div class="item"><span>X API access</span><span class="why">owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision</span></div>
+<div class="item"><span>Chart data provider</span><span class="why">external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal &amp; trigger and Position manager</span></div>
+<div class="item"><span>Tweet metric source</span><span class="why">external choice: X API directly or a scraper (the earlier draft used ScrapingDog); pick one for the baseline engine</span></div>
+<div class="item"><span>Moon bag handling</span><span class="why">owner input: where it lives and how Bobby sells it manually (dashboard, wallet, or nothing to build)</span></div>
   </div>
 
   <h2>📥 Unsorted — parked, not lost</h2>
   <div class="unsorted">
-    <div class="item"><span>—</span></div>
+    <div class="item"><span>Fractional Kelly sizing</span><span class="why">from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says</span></div>
+<div class="item"><span>6.5/8 dual threshold (with/without tweet)</span><span class="why">from the earlier draft; the new flow uses a single &gt;8 gate plus a separate 3x multiplier gate; parked in case the dual rule was intentional</span></div>
   </div>
 
   <footer>Living map — regenerated on every new thought. Source of truth: the GitHub issue behind this page.</footer>
