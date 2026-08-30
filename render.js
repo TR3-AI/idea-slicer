@@ -60,16 +60,24 @@ function parse(issue) {
   const summary =
     body.split(/^## /m)[0].split("\n").map((l) => l.trim())
       .filter((l) => l && !l.startsWith("#") && !/^\w[\w ]*:/.test(l))[0] || "";
-  const stop = /^(Owns|Needs from|Steps|Readiness|Icon):|^\d+\./;
-  const KEYS = ["now", "after-contract", "joint-design", "waiting", "blocked"];
+  const stop = /^(Owns|Needs from|Steps|Readiness|Icon|Responsibility|Starts when|Completes when|Boundary|Inputs|Outputs):|^\d+\./;
+  const RMAP = { now: "ready", "after-contract": "contract", waiting: "waiting-internal", blocked: "waiting-external" };
+  const STATES = ["ready", "ready-mocks", "contract", "waiting-internal", "waiting-external", "waiting-owner", "joint-design"];
   const depts = section("Departments").split(/^### /m).slice(1).map((chunk) => {
-    const r = meta2(chunk, /^Readiness:\s*([a-z-]+)/m);
+    const raw = meta2(chunk, /^Readiness:\s*([a-z-]+)/m);
+    const r = RMAP[raw] || raw;
     return {
       name: chunk.split("\n")[0].trim(),
-      readiness: KEYS.includes(r) ? r : "now",
+      readiness: STATES.includes(r) ? r : "ready",
       icon: meta2(chunk, /^Icon:\s*(\S+)/m) || "📦",
+      responsibility: meta2(chunk, /^Responsibility:\s*(.+)$/m),
       why: (chunk.split("\n").slice(1).find((l) => l.trim() && !stop.test(l)) || "").trim(),
+      starts: meta2(chunk, /^Starts when:\s*(.+)$/m),
+      completes: meta2(chunk, /^Completes when:\s*(.+)$/m),
+      boundary: meta2(chunk, /^Boundary:\s*(.+)$/m),
       owns: list(meta2(chunk, /^Owns:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
+      inputs: meta2(chunk, /^Inputs:\s*(.+)$/m),
+      outputs: meta2(chunk, /^Outputs:\s*(.+)$/m),
       needsFrom: list(meta2(chunk, /^Needs from:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
       steps: [...chunk.matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
       structure: [],
@@ -82,18 +90,43 @@ function parse(issue) {
     if (tn) d.structure = tn.children;
   }
   const report = section("Consolidation report").split("\n").map((l) => l.trim()).filter(Boolean).join(" · ");
+  const kv = (line) => {
+    const out = {};
+    for (const part of line.split("|").map((s) => s.trim())) {
+      const ci = part.indexOf(":");
+      if (ci > 0) out[part.slice(0, ci).trim().toLowerCase()] = part.slice(ci + 1).trim();
+    }
+    return out;
+  };
+  const groups = [...section("Correlated parallel groups").matchAll(/^- (.+)$/gm)].map((x) => {
+    const o = kv(x[1]);
+    return { name: o.group || "", members: o.members || "", snap: (o.snap || "").replace(/[^0-9]/g, ""), mode: o.mode || "", contract: o.contract || "", risk: o.risk || "" };
+  });
+  const deps = [...section("Dependency matrix").matchAll(/^- (.+)$/gm)].map((x) => {
+    const o = kv(x[1]);
+    const [prod, cons] = (x[1].split("|")[0] || "").split("→").map((s) => s.trim());
+    return { prod: prod || "", cons: cons || "", supplies: o.supplies || "", type: o.type || "", blocking: o.blocking || "", mockable: o.mockable || "" };
+  });
+  const snaps = [...section("Snap ranking").matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => {
+    const seg = x[1].split(" — ").map((s) => s.trim());
+    return { conn: seg[0] || "", score: (seg[1] || "").replace(/[^0-9]/g, ""), why: seg[2] || "", work: seg.slice(3).join(" — ") };
+  });
+  const mermaidIn = (sec) => meta2(section(sec), /```mermaid\n([\s\S]*?)```/);
   return {
     title: meta2(body, /^# (.+)$/m) || issue.title,
     status: meta2(body, /^Status:\s*(\w+)/m) || (issue.state === "CLOSED" ? "done" : "open"),
     updated: meta2(body, /^Updated:\s*([0-9-]+)/m) || new Date().toISOString().slice(0, 10),
     emoji: meta2(body, /^Emoji:\s*(\S+)/m) || "🧠",
+    system: meta2(body, /^System:\s*(\w+)/m),
+    reco: meta2(body, /^Recommended:\s*(.+)$/m),
     summary,
+    flow: mermaidIn("Operating flow"),
     needs: [...section("This idea needs").matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
-    depts,
+    depts, groups, deps, snaps,
     report,
     unresolved: [...section("Unresolved").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     unsorted: [...section("Unsorted").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
-    mermaid: meta2(body, /```mermaid\n([\s\S]*?)```/),
+    mermaid: mermaidIn("Diagram") || meta2(body, /```mermaid\n([\s\S]*?)```/),
   };
 }
 
@@ -107,10 +140,11 @@ function parseTree(text) {
     if (bi === -1) continue;
     const depth = Math.floor(bi / 4) + 1;
     const label = raw.slice(bi).replace(/^[├└]──\s?/, "").trim();
-    const m = label.match(/^(.*?)\s*\((module|section|feature)\)\s*$/i);
+    const m = label.match(/^(.*?)\s*\((module|section|feature)(?::\s*([a-z-]+))?\)\s*$/i);
     const node = {
       name: m ? m[1].trim() : label,
       type: m ? m[2].toLowerCase() : depth === 2 ? "section" : "feature",
+      mtype: m && m[3] ? m[3] : null,
       children: [],
     };
     (stack[depth - 1] || root).children.push(node);
@@ -130,32 +164,59 @@ function renderHtml(p, issue) {
   const structHtml = (nodes, lvl) => nodes.map((n) => {
     const cls = n.type === "module" ? "mod" : n.type === "section" ? "sec" : "feat";
     const kids = n.children.length ? structHtml(n.children, lvl + 1) : "";
-    return `<div class="sline ${cls} d${Math.min(lvl, 3)}"><span class="sic">${ICONS[n.type] || "🔹"}</span><span class="sname">${esc(n.name)}</span></div>${kids}`;
+    const mtype = n.type === "module" && n.mtype ? `<span class="mtype">${esc(n.mtype)}</span>` : "";
+    return `<div class="sline ${cls} d${Math.min(lvl, 3)}"><span class="sic">${ICONS[n.type] || "🔹"}</span><span class="sname">${esc(n.name)}</span>${mtype}</div>${kids}`;
   }).join("");
+  const STATE_LABEL = { ready: "✅ ready", "ready-mocks": "✅ ready with mocks", contract: "📝 contract required", "waiting-internal": "⏳ waiting on internal", "waiting-external": "🚧 waiting on external", "waiting-owner": "🚧 waiting on owner", "joint-design": "🤝 joint design" };
+  const kvline = (label, val, cls) => val ? `<div class="kv${cls ? " " + cls : ""}"><b>${label}</b> ${esc(val)}</div>` : "";
   const cardHtml = (d) => `
 <div class="dept">
   <h3><span class="dicon">${esc(d.icon)}</span>${esc(d.name)}</h3>
-  ${d.why ? `<div class="why">${esc(d.why)}</div>` : ""}
+  <div class="chips"><span class="chip state">${STATE_LABEL[d.readiness] || esc(d.readiness)}</span></div>
+  ${(d.responsibility || d.why) ? `<div class="why">${esc(d.responsibility || d.why)}</div>` : ""}
+  ${kvline("Starts when:", d.starts)}
+  ${kvline("Completes when:", d.completes)}
+  ${kvline("Boundary:", d.boundary, "boundary")}
   <div class="lbl">Owns</div>
   <div class="chips">${d.owns.length ? d.owns.map((o) => `<span class="chip">${esc(o)}</span>`).join("") : '<span class="chip none">—</span>'}</div>
   ${d.structure.length ? `<div class="lbl">Structure</div><div class="sblock">${structHtml(d.structure, 1)}</div>` : ""}
   <div class="lbl">Steps</div>
   <ol class="steps">${d.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+  ${kvline("Inputs:", d.inputs)}
+  ${kvline("Outputs:", d.outputs)}
   <div class="lbl">Needs from</div>
   <div class="chips">${d.needsFrom.length ? d.needsFrom.map((x) => `<span class="chip dep">${esc(x)}</span>`).join("") : '<span class="chip none">nothing — starts day one</span>'}</div>
 </div>`;
   const BUCKETS = [
-    ["now", "▶️ Can start in parallel now"],
-    ["after-contract", "📝 Can start in parallel after contract definition"],
-    ["joint-design", "🤝 Must perform joint design first"],
-    ["waiting", "⏳ Must wait for another department"],
-    ["blocked", "🚧 Blocked by external or owner dependency"],
+    ["now", "▶️ Can start in parallel now", ["ready", "ready-mocks"]],
+    ["after-contract", "📝 Can start in parallel after contract definition", ["contract"]],
+    ["joint-design", "🤝 Must perform joint design first", ["joint-design"]],
+    ["waiting", "⏳ Must wait for another department", ["waiting-internal"]],
+    ["blocked", "🚧 Blocked by external or owner dependency", ["waiting-external", "waiting-owner"]],
   ];
-  const groups = BUCKETS.map(([key, label]) => {
-    const ds = p.depts.filter((d) => d.readiness === key);
+  const groups = BUCKETS.map(([key, label, states]) => {
+    const ds = p.depts.filter((d) => states.includes(d.readiness));
     if (!ds.length) return "";
     return `<div class="bucket"><div class="bucket-head b-${key}">${label}</div><div class="grid">${ds.map(cardHtml).join("\n")}</div></div>`;
   }).filter(Boolean).join("\n");
+  const snapBadge = (s) => {
+    const n = Math.max(1, Math.min(5, parseInt(s, 10) || 3));
+    return `<span class="snap s${n}">${n}</span>`;
+  };
+  const pgroups = p.groups.length ? p.groups.map((g) => `
+<div class="group">
+  <h4>${esc(g.name)} ${snapBadge(g.snap)}</h4>
+  <div class="members">👥 ${esc(g.members)}${g.mode ? ` · <b>${esc(g.mode)}</b>` : ""}</div>
+  ${kvline("Contract:", g.contract)}
+  ${kvline("Main risk:", g.risk)}
+</div>`).join("\n") : `<div class="group"><div class="members">No correlated groups identified yet.</div></div>`;
+  const depRows = p.deps.map((d) => `<tr><td class="who">${esc(d.prod)}</td><td class="who">${esc(d.cons)}</td><td>${esc(d.supplies)}</td><td><span class="ttag t-${esc(d.type)}">${esc(d.type)}</span></td><td class="${d.blocking === "yes" ? "yes" : "no"}">${esc(d.blocking)}</td><td class="${d.mockable === "yes" ? "no" : ""}">${esc(d.mockable)}</td></tr>`).join("\n");
+  const depsHtml = p.deps.length
+    ? `<table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr>${depRows}</table>`
+    : "<p>No dependencies mapped yet.</p>";
+  const snapsHtml = p.snaps.length ? p.snaps.map((s, i) => `
+<div class="snaprow">${snapBadge(s.score)}<span class="conn">${i + 1}. ${esc(s.conn)}</span><span class="detail">${esc(s.why)}${s.work ? ` — <b>needs:</b> ${esc(s.work)}` : ""}</span></div>`).join("\n")
+    : `<div class="snaprow"><span class="detail">No connections ranked yet.</span></div>`;
   const itemHtml = (u) => {
     const [what, ...rest] = u.split(/\s+—\s+/);
     return `<div class="item"><span>${esc(what)}</span>${rest.length ? `<span class="why">${esc(rest.join(" — "))}</span>` : ""}</div>`;
@@ -169,12 +230,17 @@ function renderHtml(p, issue) {
   return tpl
     .replaceAll("{{TITLE}}", esc(p.title))
     .replaceAll("{{SUB}}", esc(p.summary))
+    .replaceAll("{{RECO}}", esc(p.reco))
     .replaceAll("{{UPDATED}}", esc(p.updated))
-    .replaceAll("{{STATUS}}", `${p.status} · issue #${issue.number}`)
+    .replaceAll("{{STATUS}}", `${p.status} · issue #${issue.number}${p.system ? " · " + p.system : ""}`)
     .replace("{{NEEDS}}", needs || '<span class="pill">Not sliced yet — run /ideaslicer</span>')
+    .replace("{{FLOW}}", p.flow || "flowchart TD\n  A[No operating flow yet]")
     .replace("{{DEPT_GROUPS}}", groups || "<p>No departments yet.</p>")
     .replace("{{REPORT}}", esc(p.report) || "")
     .replace("{{MERMAID}}", p.mermaid || "flowchart TD\n  A[No diagram yet]")
+    .replace("{{GROUPS}}", pgroups)
+    .replace("{{DEPS}}", depsHtml)
+    .replace("{{SNAPS}}", snapsHtml)
     .replace("{{UNRESOLVED}}", unresolvedHtml)
     .replace("{{UNSORTED}}", unsortedHtml);
 }
