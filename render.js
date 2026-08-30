@@ -203,6 +203,16 @@ for (const issue of ideas) {
     status: p.status === "done" ? "done" : "open",
     issue: `#${issue.number}`,
   });
+  // backstop: the visual link always lands on the issue, even if the model forgot to say it
+  const url = `https://tr3-ai.github.io/idea-slicer/${slug}.html`;
+  const comments = JSON.parse(sh(`gh api repos/${REPO}/issues/${issue.number}/comments --jq "[.[].body]"`));
+  if (!comments.some((c) => (c || "").includes(url))) {
+    fs.writeFileSync(".comment.tmp.md",
+      `🗺️ **Visual map:** ${url}\n\nGoes live about a minute after each change and updates itself on every new thought.`);
+    sh(`gh issue comment ${issue.number} --repo ${REPO} --body-file .comment.tmp.md`);
+    fs.unlinkSync(".comment.tmp.md");
+    console.log(`posted map link on issue #${issue.number}`);
+  }
 }
 manifest.sort((a, b) => String(b.date).localeCompare(String(a.date)));
 fs.writeFileSync("pages.json", JSON.stringify(manifest, null, 2) + "\n");
