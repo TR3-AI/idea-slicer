@@ -60,14 +60,21 @@ function parse(issue) {
   const summary =
     body.split(/^## /m)[0].split("\n").map((l) => l.trim())
       .filter((l) => l && !l.startsWith("#") && !/^\w[\w ]*:/.test(l))[0] || "";
-  const stop = /^(Owns|Needs from|Steps):|^\d+\./;
-  const depts = section("Departments").split(/^### /m).slice(1).map((chunk) => ({
-    name: chunk.split("\n")[0].trim(),
-    why: (chunk.split("\n").slice(1).find((l) => l.trim() && !stop.test(l)) || "").trim(),
-    owns: list(meta2(chunk, /^Owns:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
-    needsFrom: list(meta2(chunk, /^Needs from:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
-    steps: [...chunk.matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
-  }));
+  const stop = /^(Owns|Needs from|Steps|Readiness):|^\d+\./;
+  const KEYS = ["now", "after-contract", "joint-design", "waiting", "blocked"];
+  const depts = section("Departments").split(/^### /m).slice(1).map((chunk) => {
+    const r = meta2(chunk, /^Readiness:\s*([a-z-]+)/m);
+    return {
+      name: chunk.split("\n")[0].trim(),
+      readiness: KEYS.includes(r) ? r : "now",
+      why: (chunk.split("\n").slice(1).find((l) => l.trim() && !stop.test(l)) || "").trim(),
+      owns: list(meta2(chunk, /^Owns:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
+      needsFrom: list(meta2(chunk, /^Needs from:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
+      steps: [...chunk.matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
+    };
+  });
+  const tree = section("Structure tree").replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
+  const report = section("Consolidation report").split("\n").map((l) => l.trim()).filter(Boolean).join(" · ");
   return {
     title: meta2(body, /^# (.+)$/m) || issue.title,
     status: meta2(body, /^Status:\s*(\w+)/m) || (issue.state === "CLOSED" ? "done" : "open"),
@@ -76,6 +83,9 @@ function parse(issue) {
     summary,
     needs: [...section("This idea needs").matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
     depts,
+    tree,
+    report,
+    unresolved: [...section("Unresolved").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     unsorted: [...section("Unsorted").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     mermaid: meta2(body, /```mermaid\n([\s\S]*?)```/),
   };
@@ -87,8 +97,7 @@ function renderHtml(p, issue) {
   const needs = p.needs
     .map((n, i) => `<span class="pill"><b>${i + 1}</b>${esc(n)}</span>`)
     .join(`<span class="arr">→</span>`);
-  const cards = p.depts
-    .map((d) => `
+  const cardHtml = (d) => `
 <div class="dept">
   <h3>${esc(d.name)}</h3>
   ${d.why ? `<div class="why">${esc(d.why)}</div>` : ""}
@@ -98,13 +107,28 @@ function renderHtml(p, issue) {
   <ol class="steps">${d.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
   <div class="lbl">Needs from</div>
   <div class="chips">${d.needsFrom.length ? d.needsFrom.map((x) => `<span class="chip dep">${esc(x)}</span>`).join("") : '<span class="chip none">nothing — starts day one</span>'}</div>
-</div>`)
-    .join("\n");
+</div>`;
+  const BUCKETS = [
+    ["now", "Can start in parallel now"],
+    ["after-contract", "Can start in parallel after contract definition"],
+    ["joint-design", "Must perform joint design first"],
+    ["waiting", "Must wait for another department"],
+    ["blocked", "Blocked by external or owner dependency"],
+  ];
+  const groups = BUCKETS.map(([key, label]) => {
+    const ds = p.depts.filter((d) => d.readiness === key);
+    if (!ds.length) return "";
+    return `<div class="bucket"><div class="bucket-head b-${key}">${label}</div><div class="grid">${ds.map(cardHtml).join("\n")}</div></div>`;
+  }).filter(Boolean).join("\n");
+  const itemHtml = (u) => {
+    const [what, ...rest] = u.split(/\s+—\s+/);
+    return `<div class="item"><span>${esc(what)}</span>${rest.length ? `<span class="why">${esc(rest.join(" — "))}</span>` : ""}</div>`;
+  };
+  const unresolvedHtml = p.unresolved.length
+    ? p.unresolved.map(itemHtml).join("\n")
+    : `<div class="item"><span>None flagged — nothing material is undecided.</span></div>`;
   const unsortedHtml = p.unsorted.length
-    ? p.unsorted.map((u) => {
-        const [what, ...rest] = u.split(/\s+—\s+/);
-        return `<div class="item"><span>${esc(what)}</span>${rest.length ? `<span class="why">${esc(rest.join(" — "))}</span>` : ""}</div>`;
-      }).join("\n")
+    ? p.unsorted.map(itemHtml).join("\n")
     : `<div class="item"><span>Nothing parked — every thought has a home.</span></div>`;
   return tpl
     .replaceAll("{{TITLE}}", esc(p.title))
@@ -112,8 +136,11 @@ function renderHtml(p, issue) {
     .replaceAll("{{UPDATED}}", esc(p.updated))
     .replaceAll("{{STATUS}}", `${p.status} · issue #${issue.number}`)
     .replace("{{NEEDS}}", needs || '<span class="pill">Not sliced yet — run /idea-slicer</span>')
-    .replace("{{CARDS}}", cards || "<p>No departments yet.</p>")
+    .replace("{{DEPT_GROUPS}}", groups || "<p>No departments yet.</p>")
+    .replace("{{REPORT}}", esc(p.report) || "")
     .replace("{{MERMAID}}", p.mermaid || "flowchart TD\n  A[No diagram yet]")
+    .replace("{{TREE}}", esc(p.tree) || "Tree not generated yet — re-slice with /idea-slicer")
+    .replace("{{UNRESOLVED}}", unresolvedHtml)
     .replace("{{UNSORTED}}", unsortedHtml);
 }
 
