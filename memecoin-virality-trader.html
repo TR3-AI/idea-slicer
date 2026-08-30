@@ -36,18 +36,19 @@
   h1 { font-size: 32px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
   .sub { color: var(--soft); margin-top: 6px; font-size: 16px; }
   .stamp { color: var(--faint); font-size: 12.5px; margin-top: 6px; }
+  .reco { display: inline-block; background: var(--lav); border-radius: 999px; padding: 4px 14px; font-size: 13px; font-weight: 700; color: var(--purple); margin-top: 8px; }
+  .reco:empty { display: none; }
 
   h2 {
     font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
     color: var(--soft); margin: 32px 0 12px; text-align: center;
   }
 
-  /* ── "This idea needs" strip ───────────────────────── */
+  /* ── needs strip ───────────────────────────────────── */
   .needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
   .needs .pill {
     background: var(--card); border: 2px solid var(--line); box-shadow: var(--shadow);
-    border-radius: 999px; padding: 8px 15px; font-size: 14px; font-weight: 700;
-    white-space: nowrap;
+    border-radius: 999px; padding: 8px 15px; font-size: 14px; font-weight: 700; white-space: nowrap;
   }
   .needs .pill b { color: var(--purple); margin-right: 6px; }
   .needs .arr { color: var(--faint); font-weight: 800; }
@@ -56,8 +57,7 @@
   .bucket { margin-bottom: 22px; }
   .bucket-head {
     display: inline-block; font-size: 12.5px; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 1.5px; padding: 5px 14px; border-radius: 999px; margin-bottom: 10px;
-    color: #fff; background: var(--b-now);
+    letter-spacing: 1.5px; padding: 5px 14px; border-radius: 999px; margin-bottom: 10px; color: #fff;
   }
   .bucket-head.b-now { background: var(--b-now); }
   .bucket-head.b-after-contract { background: var(--b-contract); }
@@ -86,11 +86,15 @@
   }
   .chip.dep { background: transparent; border: 2px solid var(--b-waiting); color: var(--b-waiting); }
   .chip.none { background: transparent; color: var(--faint); font-style: italic; font-weight: 400; }
+  .chip.state { background: var(--well); border: 1.5px solid var(--line); color: var(--soft); }
+  .kv { font-size: 13.5px; margin: 5px 0; color: var(--ink); }
+  .kv b { color: var(--purple); }
+  .kv.boundary { color: var(--soft); }
   ol.steps { margin-left: 20px; font-size: 14.5px; }
   ol.steps li { margin: 4px 0; }
   ol.steps li::marker { color: var(--purple); font-weight: 800; }
 
-  /* ── structure block (visual tree, inside dept cards) ── */
+  /* ── structure block ───────────────────────────────── */
   .sblock { background: var(--well); border-radius: 14px; padding: 12px 14px; }
   .sline { display: flex; align-items: baseline; gap: 7px; font-size: 13.5px; margin: 4px 0; }
   .sline .sic { flex: 0 0 auto; font-size: 14px; }
@@ -99,6 +103,7 @@
     background: var(--lav); border: 1.5px solid #d9ccf7; border-radius: 8px;
     padding: 2px 9px; font-weight: 700; color: var(--purple);
   }
+  .sline.mod .mtype { font-size: 10.5px; color: var(--faint); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
   .sline.feat { color: var(--soft); }
   .sline.d1 { margin-left: 0; }
   .sline.d2 { margin-left: 26px; }
@@ -106,22 +111,64 @@
 
   .report { color: var(--soft); font-size: 13px; text-align: center; margin-top: 16px; }
 
-  /* ── diagram ───────────────────────────────────────── */
+  /* ── diagrams ──────────────────────────────────────── */
   .diagram {
     background: var(--card); border-radius: 22px; padding: 18px;
     box-shadow: var(--shadow); overflow-x: auto;
   }
   .mermaid { display: flex; justify-content: center; min-width: 320px; }
 
-  /* ── unresolved ────────────────────────────────────── */
+  /* ── groups ────────────────────────────────────────── */
+  .group {
+    background: var(--card); border-radius: 18px; padding: 16px 18px;
+    box-shadow: var(--shadow); margin: 10px 0; border-left: 5px solid var(--purple);
+  }
+  .group h4 { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .group .members { color: var(--soft); font-size: 13.5px; margin: 4px 0 8px; }
+  .group .kv { font-size: 13px; }
+
+  /* ── snap badges ───────────────────────────────────── */
+  .snap {
+    display: inline-block; min-width: 30px; text-align: center; font-weight: 800; font-size: 13px;
+    border-radius: 999px; padding: 3px 10px; color: #fff;
+  }
+  .snap.s5 { background: var(--b-now); }
+  .snap.s4 { background: var(--b-contract); }
+  .snap.s3 { background: var(--b-joint); }
+  .snap.s2 { background: var(--b-waiting); }
+  .snap.s1 { background: var(--b-blocked); }
+
+  .snaprow {
+    display: flex; gap: 12px; align-items: baseline; background: var(--card);
+    border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); margin: 8px 0; font-size: 14px;
+  }
+  .snaprow .conn { font-weight: 800; white-space: nowrap; }
+  .snaprow .detail { color: var(--soft); font-size: 13px; }
+  .snaprow .detail b { color: var(--ink); }
+
+  /* ── dependency matrix ─────────────────────────────── */
+  .depswrap { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 14px; overflow-x: auto; }
+  table.deps { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.deps th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--faint); padding: 6px 10px; border-bottom: 2px solid var(--line);
+  }
+  table.deps td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.deps tr:last-child td { border-bottom: none; }
+  table.deps td.who { font-weight: 700; white-space: nowrap; }
+  .ttag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 11px; font-weight: 700; background: var(--lav); color: var(--purple); white-space: nowrap; }
+  .ttag.t-hard-internal { background: #fde8ec; color: var(--b-blocked); }
+  .ttag.t-owner, .ttag.t-external { background: #fdf3e3; color: var(--b-waiting); }
+  .yes { color: var(--b-blocked); font-weight: 700; }
+  .no { color: var(--b-now); font-weight: 700; }
+
+  /* ── unresolved / unsorted ─────────────────────────── */
   .unresolved .item {
     background: rgba(224, 79, 102, .06); border: 2px dashed rgba(224, 79, 102, .35);
     border-radius: 16px; padding: 12px 16px; margin: 8px 0; font-size: 14.5px;
   }
   .unresolved .item span { color: var(--b-blocked); font-weight: 700; }
   .unresolved .item .why { display: block; color: var(--soft); font-weight: 400; font-size: 13px; margin-top: 2px; }
-
-  /* ── unsorted ──────────────────────────────────────── */
   .unsorted .item {
     background: rgba(201, 147, 10, .07); border: 2px dashed rgba(201, 147, 10, .35);
     border-radius: 16px; padding: 12px 16px; margin: 8px 0; font-size: 14.5px;
@@ -138,6 +185,7 @@
   <header>
     <h1>Memecoin virality trader</h1>
     <div class="sub"></div>
+    <div class="reco"></div>
     <div class="stamp">idea-slicer · updated 2026-08-30 · status: open · issue #4</div>
   </header>
 
@@ -146,82 +194,126 @@
     <span class="pill"><b>1</b>Virality scoring gate</span><span class="arr">→</span><span class="pill"><b>2</b>Watch monitoring</span><span class="arr">→</span><span class="pill"><b>3</b>Pattern detection</span><span class="arr">→</span><span class="pill"><b>4</b>Divergence validation</span><span class="arr">→</span><span class="pill"><b>5</b>Position management</span><span class="arr">→</span><span class="pill"><b>6</b>Full logging</span>
   </div>
 
+  <h2>🎬 Operating flow — how the finished system runs</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  A[No operating flow yet]
+    </pre>
+  </div>
+
   <h2>🗂️ Departments — by parallel readiness</h2>
   <div class="bucket"><div class="bucket-head b-now">▶️ Can start in parallel now</div><div class="grid">
 <div class="dept">
   <h3><span class="dicon">📈</span>Virality scorer</h3>
+  <div class="chips"><span class="chip state">✅ ready</span></div>
   <div class="why">One pipeline that takes a call from &quot;someone called it&quot; to &quot;qualified or dropped&quot; — intake and scoring share the coin's lifecycle, so they stay together.</div>
+  
+  
+  
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">vetted-source calls</span><span class="chip">tweet check</span><span class="chip">ScrapingDog 30-day baseline</span><span class="chip">virality multiplier</span><span class="chip">Grok combined score</span><span class="chip">6.5/8 threshold gate</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Intake</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">vetted-source listener</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Scoring</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">tweet baseline engine</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">ScrapingDog 30-day baseline</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">virality multiplier</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">Grok combined score</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Gate</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">6.5 / 8 threshold rule</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Listen for calls from vetted sources (a vetted source = a caller or group Bobby has pre-approved)</li><li>Check if the call has a tweet attached</li><li>If there is a tweet: pull a 30-day baseline via ScrapingDog (a web-scraping API) and compute the virality multiplier — how far engagement is running above its own normal</li><li>Send coin data plus the multiplier to Grok (xAI's model, used here as the scoring brain) for a combined score</li><li>Gate: 6.5+ with a tweet, 8+ without → promote to watch; otherwise drop the coin</li></ol>
+  
+  
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip none">nothing — starts day one</span></div>
 </div></div></div>
 <div class="bucket"><div class="bucket-head b-after-contract">📝 Can start in parallel after contract definition</div><div class="grid">
 <div class="dept">
   <h3><span class="dicon">👁️</span>Watch monitor</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
   <div class="why">Owns the surveillance phase: is this coin's holder base healthy enough to keep watching?</div>
+  
+  
+  
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">holder quality (bundlers</span><span class="chip">snipers</span><span class="chip">reduction trend)</span><span class="chip">age-based chart timeframe</span><span class="chip">monitor until setup or death</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Holder quality</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">holder analyzer</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">bundler detection</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">sniper detection</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">reduction trend</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Surveillance</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">age-based chart timeframe</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">setup-or-death loop</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Virality scorer: the qualified-coin payload (coin ID, score, tweet data)</li><li>Check holder quality: bundlers (wallets that bought in the same block as launch), snipers (bots that buy in the first seconds), and the reduction trend (are early wallets selling off?)</li><li>Open the chart on the age-based timeframe (candle size matched to how old the coin is)</li><li>Keep monitoring: hand the coin on when a setup starts forming, or drop it if it dies</li></ol>
+  
+  
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Virality scorer</span></div>
 </div>
 
 <div class="dept">
   <h3><span class="dicon">📐</span>Pattern engine</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
   <div class="why">Pure chart-geometry team: finds the setup and fires the breakout event. Nothing else draws on charts.</div>
+  
+  
+  
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">descending triangle / pennant detection</span><span class="chip">pattern start marking</span><span class="chip">breakout wait</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Chart patterns</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">pattern detector</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">descending triangle</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">pennant</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">pattern start marker</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">breakout watcher</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Watch monitor: the watch-list feed (live coins plus chart data)</li><li>Detect a descending triangle or a pennant (both = price squeezing into a tighter range before a move)</li><li>Mark the pattern start — all later divergence checks only look inside this window</li><li>Wait for the breakout (price leaving the pattern) and emit a breakout event</li></ol>
+  
+  
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Watch monitor</span></div>
 </div>
 
 <div class="dept">
   <h3><span class="dicon">🔀</span>Divergence validator</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
   <div class="why">The only department that compares price against oscillators — both for the entry check and for exit warnings while holding.</div>
+  
+  
+  
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">two-leg divergence check</span><span class="chip">pivot 1 &amp; 2 detection</span><span class="chip">price vs OBV/RSI comparison</span><span class="chip">recurring bearish-divergence flags</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Two-leg divergence</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">pivot finder</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">price vs OBV/RSI comparator</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">bearish-divergence flagger</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Pattern engine: pattern window plus breakout event</li><li>On breakout, look only inside the pattern for a two-leg divergence: find pivot 1 and pivot 2 (swing points)</li><li>Compare price vs OBV (on-balance volume = running total of volume direction) or RSI (relative strength index = momentum gauge) across the two pivots</li><li>Valid divergence → emit an entry signal; invalid → pass on the coin</li><li>While a position is open, keep flagging qualifying bearish divergences (price makes a higher high, the oscillator doesn't) as exit signals</li></ol>
+  
+  
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Pattern engine</span></div>
 </div>
 
 <div class="dept">
   <h3><span class="dicon">📓</span>Trade journal</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
   <div class="why">Everything logged, one place: scores, gate decisions, watch events, signals, fills.</div>
+  
+  
+  
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">full event logging</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Event log</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">journal logger</span></div><div class="sline feat d3"><span class="sic">🔹</span><span class="sname">per-coin / per-trade queries</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the log schema contract (event types and fields) that every other department writes against</li><li>Record scores, gate decisions, watch events, entry/exit signals, and every fill</li><li>Make the log queryable per coin and per trade</li></ol>
+  
+  
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">nothing — every department writes to it</span></div>
 </div></div></div>
 <div class="bucket"><div class="bucket-head b-waiting">⏳ Must wait for another department</div><div class="grid">
 <div class="dept">
   <h3><span class="dicon">💼</span>Position manager</h3>
+  <div class="chips"><span class="chip state">⏳ waiting on internal</span></div>
   <div class="why">Owns the whole position lifecycle from sizing to the moon bag — entry, stop, and scale-outs share state and a transaction boundary, so they are one team.</div>
+  
+  
+  
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">fractional Kelly sizing</span><span class="chip">entry</span><span class="chip">30% stop</span><span class="chip">2X capital recovery</span><span class="chip">15% divergence scale-outs</span><span class="chip">moon bag handoff</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Entry</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">fractional Kelly sizer</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">30% stop</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Exit ladder</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">2X capital recovery</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">15% divergence scale-out</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">moon bag handoff</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Divergence validator: entry-signal and exit-signal shapes</li><li>Size the entry with fractional Kelly (Kelly = a formula for optimal bet size from win rate and odds; fractional = deliberately use only a slice of it, safer)</li><li>Enter and set a 30% stop (auto-sell if price falls 30% below entry, capping the loss)</li><li>At 2X: sell enough to recover the initial capital and cancel the stop — from here it's house money</li><li>On each qualifying bearish divergence: sell about 15% of what's left; repeat until only the moon bag remains</li><li>Moon bag is manual — hand it off to Bobby and close out the managed position</li></ol>
+  
+  
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Divergence validator</span></div>
 </div></div></div>
   <div class="report">Departments: 10 candidates → 6 final (call intake folded into Virality scorer — one pipeline; Kelly sizing and scale-outs stay inside Position manager on shared-lifecycle grounds; tweet team and holder-quality team absorbed into scorer and watch monitor) · Modules: 4 candidates → 4 genuine (tweet baseline engine, holder analyzer, pattern detector, journal logger)</div>
 
-  <h2>🔀 Flow — who hands what to whom</h2>
+  <h2>🔀 Integration map — who hands what to whom</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
@@ -262,6 +354,17 @@ flowchart TD
   M4 -.-> L1
     </pre>
   </div>
+
+  <h2>🤝 Correlated parallel groups</h2>
+  <div class="group"><div class="members">No correlated groups identified yet.</div></div>
+
+  <h2>🔗 Dependency matrix</h2>
+  <div class="depswrap">
+    <p>No dependencies mapped yet.</p>
+  </div>
+
+  <h2>🧲 Snap-together ranking — easiest first</h2>
+  <div class="snaprow"><span class="detail">No connections ranked yet.</span></div>
 
   <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">

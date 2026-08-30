@@ -36,18 +36,19 @@
   h1 { font-size: 32px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
   .sub { color: var(--soft); margin-top: 6px; font-size: 16px; }
   .stamp { color: var(--faint); font-size: 12.5px; margin-top: 6px; }
+  .reco { display: inline-block; background: var(--lav); border-radius: 999px; padding: 4px 14px; font-size: 13px; font-weight: 700; color: var(--purple); margin-top: 8px; }
+  .reco:empty { display: none; }
 
   h2 {
     font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
     color: var(--soft); margin: 32px 0 12px; text-align: center;
   }
 
-  /* ── "This idea needs" strip ───────────────────────── */
+  /* ── needs strip ───────────────────────────────────── */
   .needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
   .needs .pill {
     background: var(--card); border: 2px solid var(--line); box-shadow: var(--shadow);
-    border-radius: 999px; padding: 8px 15px; font-size: 14px; font-weight: 700;
-    white-space: nowrap;
+    border-radius: 999px; padding: 8px 15px; font-size: 14px; font-weight: 700; white-space: nowrap;
   }
   .needs .pill b { color: var(--purple); margin-right: 6px; }
   .needs .arr { color: var(--faint); font-weight: 800; }
@@ -56,8 +57,7 @@
   .bucket { margin-bottom: 22px; }
   .bucket-head {
     display: inline-block; font-size: 12.5px; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 1.5px; padding: 5px 14px; border-radius: 999px; margin-bottom: 10px;
-    color: #fff; background: var(--b-now);
+    letter-spacing: 1.5px; padding: 5px 14px; border-radius: 999px; margin-bottom: 10px; color: #fff;
   }
   .bucket-head.b-now { background: var(--b-now); }
   .bucket-head.b-after-contract { background: var(--b-contract); }
@@ -86,11 +86,15 @@
   }
   .chip.dep { background: transparent; border: 2px solid var(--b-waiting); color: var(--b-waiting); }
   .chip.none { background: transparent; color: var(--faint); font-style: italic; font-weight: 400; }
+  .chip.state { background: var(--well); border: 1.5px solid var(--line); color: var(--soft); }
+  .kv { font-size: 13.5px; margin: 5px 0; color: var(--ink); }
+  .kv b { color: var(--purple); }
+  .kv.boundary { color: var(--soft); }
   ol.steps { margin-left: 20px; font-size: 14.5px; }
   ol.steps li { margin: 4px 0; }
   ol.steps li::marker { color: var(--purple); font-weight: 800; }
 
-  /* ── structure block (visual tree, inside dept cards) ── */
+  /* ── structure block ───────────────────────────────── */
   .sblock { background: var(--well); border-radius: 14px; padding: 12px 14px; }
   .sline { display: flex; align-items: baseline; gap: 7px; font-size: 13.5px; margin: 4px 0; }
   .sline .sic { flex: 0 0 auto; font-size: 14px; }
@@ -99,6 +103,7 @@
     background: var(--lav); border: 1.5px solid #d9ccf7; border-radius: 8px;
     padding: 2px 9px; font-weight: 700; color: var(--purple);
   }
+  .sline.mod .mtype { font-size: 10.5px; color: var(--faint); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
   .sline.feat { color: var(--soft); }
   .sline.d1 { margin-left: 0; }
   .sline.d2 { margin-left: 26px; }
@@ -106,22 +111,64 @@
 
   .report { color: var(--soft); font-size: 13px; text-align: center; margin-top: 16px; }
 
-  /* ── diagram ───────────────────────────────────────── */
+  /* ── diagrams ──────────────────────────────────────── */
   .diagram {
     background: var(--card); border-radius: 22px; padding: 18px;
     box-shadow: var(--shadow); overflow-x: auto;
   }
   .mermaid { display: flex; justify-content: center; min-width: 320px; }
 
-  /* ── unresolved ────────────────────────────────────── */
+  /* ── groups ────────────────────────────────────────── */
+  .group {
+    background: var(--card); border-radius: 18px; padding: 16px 18px;
+    box-shadow: var(--shadow); margin: 10px 0; border-left: 5px solid var(--purple);
+  }
+  .group h4 { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .group .members { color: var(--soft); font-size: 13.5px; margin: 4px 0 8px; }
+  .group .kv { font-size: 13px; }
+
+  /* ── snap badges ───────────────────────────────────── */
+  .snap {
+    display: inline-block; min-width: 30px; text-align: center; font-weight: 800; font-size: 13px;
+    border-radius: 999px; padding: 3px 10px; color: #fff;
+  }
+  .snap.s5 { background: var(--b-now); }
+  .snap.s4 { background: var(--b-contract); }
+  .snap.s3 { background: var(--b-joint); }
+  .snap.s2 { background: var(--b-waiting); }
+  .snap.s1 { background: var(--b-blocked); }
+
+  .snaprow {
+    display: flex; gap: 12px; align-items: baseline; background: var(--card);
+    border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); margin: 8px 0; font-size: 14px;
+  }
+  .snaprow .conn { font-weight: 800; white-space: nowrap; }
+  .snaprow .detail { color: var(--soft); font-size: 13px; }
+  .snaprow .detail b { color: var(--ink); }
+
+  /* ── dependency matrix ─────────────────────────────── */
+  .depswrap { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 14px; overflow-x: auto; }
+  table.deps { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.deps th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--faint); padding: 6px 10px; border-bottom: 2px solid var(--line);
+  }
+  table.deps td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.deps tr:last-child td { border-bottom: none; }
+  table.deps td.who { font-weight: 700; white-space: nowrap; }
+  .ttag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 11px; font-weight: 700; background: var(--lav); color: var(--purple); white-space: nowrap; }
+  .ttag.t-hard-internal { background: #fde8ec; color: var(--b-blocked); }
+  .ttag.t-owner, .ttag.t-external { background: #fdf3e3; color: var(--b-waiting); }
+  .yes { color: var(--b-blocked); font-weight: 700; }
+  .no { color: var(--b-now); font-weight: 700; }
+
+  /* ── unresolved / unsorted ─────────────────────────── */
   .unresolved .item {
     background: rgba(224, 79, 102, .06); border: 2px dashed rgba(224, 79, 102, .35);
     border-radius: 16px; padding: 12px 16px; margin: 8px 0; font-size: 14.5px;
   }
   .unresolved .item span { color: var(--b-blocked); font-weight: 700; }
   .unresolved .item .why { display: block; color: var(--soft); font-weight: 400; font-size: 13px; margin-top: 2px; }
-
-  /* ── unsorted ──────────────────────────────────────── */
   .unsorted .item {
     background: rgba(201, 147, 10, .07); border: 2px dashed rgba(201, 147, 10, .35);
     border-radius: 16px; padding: 12px 16px; margin: 8px 0; font-size: 14.5px;
@@ -137,8 +184,9 @@
 
   <header>
     <h1>Trading bot</h1>
-    <div class="sub">A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.</div>
-    <div class="stamp">idea-slicer · updated 2026-08-29 · status: open · issue #1</div>
+    <div class="sub">A bot that watches the market, and when a valid signal appears, places an order protected by a stop-loss and a dynamic take-profit, then tracks the position until exit. Started by a market data tick; ends with a closed, logged trade.</div>
+    <div class="reco">4 departments, 6 sections, 2 genuine modules</div>
+    <div class="stamp">idea-slicer · updated 2026-08-30 · status: open · issue #1 · greenfield</div>
   </header>
 
   <h2>🧭 This idea needs — in order</h2>
@@ -146,58 +194,98 @@
     <span class="pill"><b>1</b>Broker connection (API keys + integration)</span><span class="arr">→</span><span class="pill"><b>2</b>Order engine (placement, stop-loss, TP)</span><span class="arr">→</span><span class="pill"><b>3</b>Position tracker</span><span class="arr">→</span><span class="pill"><b>4</b>Front-end UI</span>
   </div>
 
+  <h2>🎬 Operating flow — how the finished system runs</h2>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+  A["📡 Market data tick"] --> B["🧮 Signal + qualification checks"]
+  B --> C{"❓ Trade valid?"}
+  C -- "❌ Reject" --> Z["🚫 Skip — log reason"]
+  C -- "✅ Approve" --> D["📤 Place order + 🛑 SL + 🎯 TP"]
+  D --> E["📊 Track open position"]
+  E --> F{"❓ Exit condition?"}
+  F -- "⏳ Neither hit" --> E
+  F -- "🛑 SL / 🎯 TP" --> G["📤 Close order"]
+  G --> H["🧾 Log result"]
+    </pre>
+  </div>
+
   <h2>🗂️ Departments — by parallel readiness</h2>
   <div class="bucket"><div class="bucket-head b-now">▶️ Can start in parallel now</div><div class="grid">
 <div class="dept">
   <h3><span class="dicon">🏦</span>Broker connection</h3>
-  <div class="why">Everything talks to the exchange through this team.</div>
+  <div class="chips"><span class="chip state">✅ ready</span></div>
+  <div class="why">Everything talks to the exchange through this team — the only department that touches the broker API.</div>
+  <div class="kv"><b>Starts when:</b> API keys for the exchange exist (owner-supplied)</div>
+  <div class="kv"><b>Completes when:</b> the client module returns account balance and live price from the exchange</div>
+  <div class="kv boundary"><b>Boundary:</b> owns transport, auth, rate limits; does not own trading decisions or display</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">API keys</span><span class="chip">API integration</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline mod d1"><span class="sic">🧩</span><span class="sname">API client</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">auth + API keys</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">rate limits + retries</span></div></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline mod d1"><span class="sic">🧩</span><span class="sname">API client</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">auth + API keys</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">rate limits + retries</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Get API keys for the exchange (keys = the password that lets code trade on your account)</li><li>Wrap the exchange API in one client module — one place for auth, rate limits, retries</li><li>Prove it: fetch account balance and live price</li></ol>
+  <div class="kv"><b>Inputs:</b> API keys (owner), exchange API docs (external)</div>
+  <div class="kv"><b>Outputs:</b> broker client + fill events → Order engine, Position tracker</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip none">nothing — starts day one</span></div>
 </div></div></div>
 <div class="bucket"><div class="bucket-head b-after-contract">📝 Can start in parallel after contract definition</div><div class="grid">
 <div class="dept">
   <h3><span class="dicon">⚙️</span>Order engine</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
   <div class="why">The only department allowed to create, change, or cancel orders. Placement, stop-loss, and TP stay together because they share the order lifecycle.</div>
+  <div class="kv"><b>Starts when:</b> the broker client contract is frozen (place/cancel calls, fill-event shapes)</div>
+  <div class="kv"><b>Completes when:</b> an order with attached SL + dynamic TP round-trips on the exchange test environment</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the order lifecycle and pre-trade qualification; does not own market data, position accounting, or display</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">Order placement</span><span class="chip">Stop-loss</span><span class="chip">Dynamic TP</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Placement</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">order state machine</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Protective exits</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">stop-loss</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">dynamic TP</span></div></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Placement</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">order state machine</span><span class="mtype">project-specific</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Protective exits</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">stop-loss</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">dynamic TP</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Broker connection: place/cancel calls, fill events</li><li>Place a basic market/limit order through the broker client</li><li>Attach a stop-loss (auto-sell if price drops to a level you set, capping the loss)</li><li>Attach a dynamic TP (take-profit: auto-sell to lock gains; &quot;dynamic&quot; = the level trails the price instead of sitting fixed)</li></ol>
+  <div class="kv"><b>Inputs:</b> broker client (Broker connection), trade intent</div>
+  <div class="kv"><b>Outputs:</b> order events → Position tracker; order commands → Front-end UI</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Broker connection</span></div>
 </div>
 
 <div class="dept">
   <h3><span class="dicon">📡</span>Position tracker</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
   <div class="why">Single source of truth for what is open right now.</div>
+  <div class="kv"><b>Starts when:</b> the fill-event contract is frozen</div>
+  <div class="kv"><b>Completes when:</b> a live positions table stays correct through fills, reconnects, and restarts</div>
+  <div class="kv boundary"><b>Boundary:</b> owns position state and P&amp;L math; does not own order decisions or display</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">Tracking open positions</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Live positions table</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">P&amp;L calculator</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Broker connection: fill-event stream shape</li><li>Subscribe to fill events from the broker client</li><li>Keep a live table of open positions: size, entry, current P&amp;L</li><li>Reconcile with the exchange on startup and on a timer</li></ol>
+  <div class="kv"><b>Inputs:</b> fill events (Broker connection), order events (Order engine)</div>
+  <div class="kv"><b>Outputs:</b> positions read model → Front-end UI</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Broker connection</span></div>
 </div></div></div>
 <div class="bucket"><div class="bucket-head b-waiting">⏳ Must wait for another department</div><div class="grid">
 <div class="dept">
   <h3><span class="dicon">🖥️</span>Front-end UI</h3>
-  <div class="why">The dashboard; read-only views plus buttons that call the order engine.</div>
+  <div class="chips"><span class="chip state">⏳ waiting on internal</span></div>
+  <div class="why">The dashboard — read-only views plus buttons that call the order engine.</div>
+  <div class="kv"><b>Starts when:</b> the order engine and position tracker have real deliverables running</div>
+  <div class="kv"><b>Completes when:</b> Bobby can watch positions live and place/close an order from the screen</div>
+  <div class="kv boundary"><b>Boundary:</b> owns display and user actions only; never talks to the exchange directly</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">Front end</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Positions view</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Order form</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Show open positions live from the tracker</li><li>Order form with stop-loss + dynamic TP fields</li><li>Manual close button routed through the order engine</li></ol>
+  <div class="kv"><b>Inputs:</b> positions read model (Position tracker), order commands (Order engine)</div>
+  <div class="kv"><b>Outputs:</b> screen → Bobby</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Order engine</span><span class="chip dep">Position tracker</span></div>
 </div></div></div>
   <div class="report">Departments: 6 candidates → 4 final (stop-loss and TP teams merged into Order engine on shared-lifecycle grounds) · Modules: 4 candidates → 2 genuine (API client, order state machine)</div>
 
-  <h2>🔀 Flow — who hands what to whom</h2>
+  <h2>🔀 Integration map — who hands what to whom</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
@@ -219,6 +307,50 @@ flowchart TD
   T2 ==> U1
     </pre>
   </div>
+
+  <h2>🤝 Correlated parallel groups</h2>
+  
+<div class="group">
+  <h4>Broker plumbing <span class="snap s4">4</span></h4>
+  <div class="members">👥 Broker connection + Order engine · <b>frozen-contract</b></div>
+  <div class="kv"><b>Contract:</b> broker client interface (place/cancel/fills)</div>
+  <div class="kv"><b>Main risk:</b> auth and rate-limit assumptions drifting apart</div>
+</div>
+
+<div class="group">
+  <h4>Runtime truth <span class="snap s5">5</span></h4>
+  <div class="members">👥 Order engine + Position tracker · <b>frozen-contract</b></div>
+  <div class="kv"><b>Contract:</b> order/fill event schema</div>
+  <div class="kv"><b>Main risk:</b> missed fills on reconnect corrupting the positions table</div>
+</div>
+
+<div class="group">
+  <h4>Display <span class="snap s3">3</span></h4>
+  <div class="members">👥 Front-end UI + Position tracker + Order engine · <b>integration-heavy</b></div>
+  <div class="kv"><b>Contract:</b> positions read model + command API</div>
+  <div class="kv"><b>Main risk:</b> stale UI state; needs frequent checkpoints</div>
+</div>
+
+  <h2>🔗 Dependency matrix</h2>
+  <div class="depswrap">
+    <table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr><tr><td class="who">Bobby</td><td class="who">Broker connection</td><td>exchange API keys</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Exchange API</td><td class="who">Broker connection</td><td>market data + order endpoints</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Broker connection</td><td class="who">Order engine</td><td>broker client (place/cancel)</td><td><span class="ttag t-hard-internal">hard-internal</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
+<tr><td class="who">Broker connection</td><td class="who">Position tracker</td><td>fill-event stream</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Order engine</td><td class="who">Position tracker</td><td>order events</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Position tracker</td><td class="who">Front-end UI</td><td>positions read model</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr>
+<tr><td class="who">Order engine</td><td class="who">Front-end UI</td><td>order command API</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr></table>
+  </div>
+
+  <h2>🧲 Snap-together ranking — easiest first</h2>
+  
+<div class="snaprow"><span class="snap s5">5</span><span class="conn">1. Order engine → Position tracker</span><span class="detail">direct producer-consumer with one shared event schema — <b>needs:</b> freeze the event contract, then both run in parallel</span></div>
+
+<div class="snaprow"><span class="snap s4">4</span><span class="conn">2. Broker connection → Order engine</span><span class="detail">direct consumer of the client, needs a small adapter + fixtures — <b>needs:</b> pin the client interface</span></div>
+
+<div class="snaprow"><span class="snap s3">3</span><span class="conn">3. Position tracker → Front-end UI</span><span class="detail">needs a deliberately designed read model — <b>needs:</b> define schema + mock server</span></div>
+
+<div class="snaprow"><span class="snap s3">3</span><span class="conn">4. Order engine → Front-end UI</span><span class="detail">command path needs an idempotency rule — <b>needs:</b> design the command contract before UI starts</span></div>
 
   <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">

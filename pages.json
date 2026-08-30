@@ -11,8 +11,8 @@
   {
     "file": "trading-bot.html",
     "title": "Trading bot",
-    "desc": "A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.",
-    "date": "2026-08-29",
+    "desc": "A bot that watches the market, and when a valid signal appears, places an order protected by a stop-loss and a dynamic take-profit, then tracks the position until exit. Started by a market data tick; ",
+    "date": "2026-08-30",
     "emoji": "🤖",
     "status": "open",
     "issue": "#1"
