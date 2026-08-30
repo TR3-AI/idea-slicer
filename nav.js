@@ -7,22 +7,22 @@
   style.textContent =
     '.slicenav{position:sticky;top:10px;z-index:50;display:flex;align-items:center;gap:10px;' +
     'max-width:560px;margin:0 auto 18px;padding:8px 8px 8px 12px;' +
-    'background:rgba(19,26,38,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);' +
-    'border:1px solid #243149;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.35)}' +
-    '.slicenav-home{flex:0 0 auto;text-decoration:none;font-weight:800;font-size:15px;color:#5b8cff;' +
-    'background:#182236;padding:10px 13px;border-radius:12px;white-space:nowrap}' +
+    'background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);' +
+    'border-radius:16px;box-shadow:0 8px 24px rgba(70,50,120,.14)}' +
+    '.slicenav-home{flex:0 0 auto;text-decoration:none;font-weight:800;font-size:15px;color:#6b4fd0;' +
+    'background:#f3f0ff;padding:10px 13px;border-radius:12px;white-space:nowrap}' +
     '.slicenav-home:active{transform:scale(.98)}' +
     '.slicenav-search{position:relative;flex:1 1 auto}' +
-    '#slicenav-q{width:100%;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid #243149;' +
-    'background:#0f1520;color:#e8eef7;outline:none;font-family:inherit}' +
-    '#slicenav-q:focus{border-color:#5b8cff}' +
-    '.slicenav-results{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#131a26;' +
-    'border:1px solid #243149;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.5);padding:6px;max-height:62vh;overflow:auto}' +
-    '.slicenav-results a{display:flex;align-items:center;gap:10px;text-decoration:none;color:#e8eef7;' +
+    '#slicenav-q{width:100%;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid #e7e0f5;' +
+    'background:#fff;color:#2b2140;outline:none;font-family:inherit}' +
+    '#slicenav-q:focus{border-color:#bfa8f0}' +
+    '.slicenav-results{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;' +
+    'border-radius:14px;box-shadow:0 12px 30px rgba(70,50,120,.18);padding:6px;max-height:62vh;overflow:auto}' +
+    '.slicenav-results a{display:flex;align-items:center;gap:10px;text-decoration:none;color:#2b2140;' +
     'padding:11px 12px;border-radius:10px;font-size:15px}' +
-    '.slicenav-results a:active{background:#182236}' +
+    '.slicenav-results a:active{background:#f3f0ff}' +
     '.slicenav-results .ic{font-size:22px;flex:0 0 auto}' +
-    '.slicenav-empty{color:#93a3ba;text-align:center;padding:12px;margin:0;font-size:14px}';
+    '.slicenav-empty{color:#6b6580;text-align:center;padding:12px;margin:0;font-size:14px}';
   document.head.appendChild(style);
 
   var bar = document.createElement('div');
