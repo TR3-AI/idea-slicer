@@ -214,8 +214,17 @@ function renderHtml(p, issue) {
   const depsHtml = p.deps.length
     ? `<table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr>${depRows}</table>`
     : "<p>No dependencies mapped yet.</p>";
-  const snapsHtml = p.snaps.length ? p.snaps.map((s, i) => `
-<div class="snaprow">${snapBadge(s.score)}<span class="conn">${i + 1}. ${esc(s.conn)}</span><span class="detail">${esc(s.why)}${s.work ? ` — <b>needs:</b> ${esc(s.work)}` : ""}</span></div>`).join("\n")
+  const SLABEL = { 5: "Direct snap", 4: "Strong fit", 3: "Moderate fit", 2: "Weak fit", 1: "High-risk" };
+  const snapsHtml = p.snaps.length ? p.snaps.map((s, i) => {
+    const n = Math.max(1, Math.min(5, parseInt(s.score, 10) || 3));
+    const meter = "●".repeat(n) + "○".repeat(5 - n);
+    return `
+<div class="snaprow">
+  <div class="snapscore">${snapBadge(s.score)}<span class="meter m${n}">${meter}</span><span class="slabel">${SLABEL[n]}</span></div>
+  <div class="smain"><span class="conn">${i + 1}. ${esc(s.conn)}</span><span class="swhy">${esc(s.why)}</span></div>
+  ${s.work ? `<div class="swork"><b>needs</b>${esc(s.work)}</div>` : `<div class="swork none">snaps on contact</div>`}
+</div>`;
+  }).join("\n")
     : `<div class="snaprow"><span class="detail">No connections ranked yet.</span></div>`;
   const allMods = [];
   const walkMods = (nodes, dept) => nodes.forEach((n) => {
