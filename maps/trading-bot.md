@@ -93,8 +93,8 @@ TRADING BOT
 - Max position size value — owner-supplied input: the 2% figure needs Bobby's confirmation before it becomes a rule
 
 ## Unsorted
-- alerts — ping me when a trade opens or closes (Telegram?) [#3] — arrived via GitHub, not yet sliced — run /idea-slicer to place it
-- max position size — never risk more than 2% of the account on a single trade [#2] — arrived via GitHub, not yet sliced — run /idea-slicer to place it
+- alerts — ping me when a trade opens or closes (Telegram?) [#3] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
+- max position size — never risk more than 2% of the account on a single trade [#2] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - backtesting?? — could be its own Strategy department, or a mode of the order engine. Needs one more thought to decide.
 
 ## Raw log
