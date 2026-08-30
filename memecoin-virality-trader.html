@@ -142,12 +142,24 @@
   .snap.s1 { background: var(--b-blocked); }
 
   .snaprow {
-    display: flex; gap: 12px; align-items: baseline; background: var(--card);
-    border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); margin: 8px 0; font-size: 14px;
+    display: grid; grid-template-columns: 122px 1fr minmax(170px, 230px); gap: 14px; align-items: start;
+    background: var(--card); border-radius: 16px; padding: 14px 16px; box-shadow: var(--shadow); margin: 8px 0;
   }
-  .snaprow .conn { font-weight: 800; white-space: nowrap; }
+  .snapscore { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .snapscore .meter { font-size: 11px; letter-spacing: 2px; }
+  .snapscore .meter.m5 { color: var(--b-now); }
+  .snapscore .meter.m4 { color: var(--b-contract); }
+  .snapscore .meter.m3 { color: var(--b-joint); }
+  .snapscore .meter.m2 { color: var(--b-waiting); }
+  .snapscore .meter.m1 { color: var(--b-blocked); }
+  .snapscore .slabel { font-size: 10.5px; font-weight: 700; color: var(--soft); text-transform: uppercase; letter-spacing: .5px; }
+  .smain .conn { font-weight: 800; display: block; font-size: 14.5px; }
+  .smain .swhy { display: block; color: var(--soft); font-size: 13px; margin-top: 3px; }
+  .swork { background: var(--well); border-radius: 10px; padding: 8px 12px; font-size: 12.5px; }
+  .swork b { color: var(--purple); text-transform: uppercase; font-size: 10.5px; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+  .swork.none { color: var(--faint); font-style: italic; }
   .snaprow .detail { color: var(--soft); font-size: 13px; }
-  .snaprow .detail b { color: var(--ink); }
+  @media (max-width: 640px) { .snaprow { grid-template-columns: 1fr; } }
 
   /* ── dependency matrix ─────────────────────────────── */
   .depswrap { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 14px; overflow-x: auto; }
@@ -484,19 +496,47 @@ flowchart TD
 
   <h2>🧲 Snap-together ranking — easiest first</h2>
   
-<div class="snaprow"><span class="snap s5">5</span><span class="conn">1. Trade executor → Position manager</span><span class="detail">fills feed the ladder directly through one event schema — <b>needs:</b> freeze the fill-event contract first</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s5">5</span><span class="meter m5">●●●●●</span><span class="slabel">Direct snap</span></div>
+  <div class="smain"><span class="conn">1. Trade executor → Position manager</span><span class="swhy">fills feed the ladder directly through one event schema</span></div>
+  <div class="swork"><b>needs</b>freeze the fill-event contract first</div>
+</div>
 
-<div class="snaprow"><span class="snap s4">4</span><span class="conn">2. Signal &amp; trigger → Trade executor</span><span class="detail">one trade-intent object with the stop attached — <b>needs:</b> pin TradeIntent + idempotency rule</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s4">4</span><span class="meter m4">●●●●○</span><span class="slabel">Strong fit</span></div>
+  <div class="smain"><span class="conn">2. Signal &amp; trigger → Trade executor</span><span class="swhy">one trade-intent object with the stop attached</span></div>
+  <div class="swork"><b>needs</b>pin TradeIntent + idempotency rule</div>
+</div>
 
-<div class="snaprow"><span class="snap s4">4</span><span class="conn">3. Virality scorer → Narrative analysis</span><span class="detail">candidate passes with its metrics attached — <b>needs:</b> freeze the candidate schema</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s4">4</span><span class="meter m4">●●●●○</span><span class="slabel">Strong fit</span></div>
+  <div class="smain"><span class="conn">3. Virality scorer → Narrative analysis</span><span class="swhy">candidate passes with its metrics attached</span></div>
+  <div class="swork"><b>needs</b>freeze the candidate schema</div>
+</div>
 
-<div class="snaprow"><span class="snap s3">3</span><span class="conn">4. Callout intake → Virality scorer</span><span class="detail">needs the normalized coin+tweet shape — <b>needs:</b> define the normalizer output</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s3">3</span><span class="meter m3">●●●○○</span><span class="slabel">Moderate fit</span></div>
+  <div class="smain"><span class="conn">4. Callout intake → Virality scorer</span><span class="swhy">needs the normalized coin+tweet shape</span></div>
+  <div class="swork"><b>needs</b>define the normalizer output</div>
+</div>
 
-<div class="snaprow"><span class="snap s3">3</span><span class="conn">5. Narrative analysis → Bundler checker</span><span class="detail">pass-through plus the Grok scores — <b>needs:</b> extend the candidate schema</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s3">3</span><span class="meter m3">●●●○○</span><span class="slabel">Moderate fit</span></div>
+  <div class="smain"><span class="conn">5. Narrative analysis → Bundler checker</span><span class="swhy">pass-through plus the Grok scores</span></div>
+  <div class="swork"><b>needs</b>extend the candidate schema</div>
+</div>
 
-<div class="snaprow"><span class="snap s3">3</span><span class="conn">6. Bundler checker → Signal &amp; trigger</span><span class="detail">clean candidate with bundler verdict attached — <b>needs:</b> extend the candidate schema again</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s3">3</span><span class="meter m3">●●●○○</span><span class="slabel">Moderate fit</span></div>
+  <div class="smain"><span class="conn">6. Bundler checker → Signal &amp; trigger</span><span class="swhy">clean candidate with bundler verdict attached</span></div>
+  <div class="swork"><b>needs</b>extend the candidate schema again</div>
+</div>
 
-<div class="snaprow"><span class="snap s3">3</span><span class="conn">7. Chart provider → Signal &amp; trigger + Position manager</span><span class="detail">two consumers of one provider — <b>needs:</b> pick the provider early; it is a shared foundation</span></div>
+<div class="snaprow">
+  <div class="snapscore"><span class="snap s3">3</span><span class="meter m3">●●●○○</span><span class="slabel">Moderate fit</span></div>
+  <div class="smain"><span class="conn">7. Chart provider → Signal &amp; trigger + Position manager</span><span class="swhy">two consumers of one provider</span></div>
+  <div class="swork"><b>needs</b>pick the provider early; it is a shared foundation</div>
+</div>
 
   <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">
