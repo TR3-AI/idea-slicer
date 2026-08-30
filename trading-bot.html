@@ -179,6 +179,11 @@
   .unsorted .item span { color: var(--amber); font-weight: 700; }
   .unsorted .why { display: block; color: var(--soft); font-weight: 400; font-size: 13px; margin-top: 2px; }
 
+  /* ── dependency web ────────────────────────────────── */
+  .web { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 10px 10px 4px; }
+  #depweb { width: 100%; height: 540px; display: block; }
+  .webkey { text-align: center; color: var(--soft); font-size: 12.5px; padding: 6px 0 10px; }
+
   footer { text-align: center; color: var(--soft); font-size: 13px; margin-top: 40px; }
 </style>
 </head>
@@ -350,6 +355,12 @@ flowchart TD
 <tr><td class="who">Order engine</td><td class="who">Front-end UI</td><td>order command API</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="no">yes</td></tr></table>
   </div>
 
+  <h2>🕸️ Dependency web — the graph view</h2>
+  <div class="web">
+    <svg id="depweb" role="img" aria-label="Dependency graph"></svg>
+    <div class="webkey">🟣 department · ⚪ external provider · 🟡 you (owner) · <b style="color:#e04f66">— blocking</b> · ╌ mockable · drag nodes to untangle</div>
+  </div>
+
   <h2>🧲 Snap-together ranking — easiest first</h2>
   
 <div class="snaprow"><span class="snap s5">5</span><span class="conn">1. Order engine → Position tracker</span><span class="detail">direct producer-consumer with one shared event schema — <b>needs:</b> freeze the event contract, then both run in parallel</span></div>
@@ -397,6 +408,52 @@ flowchart TD
       edgeLabelBackground: "#ffffff",
       titleColor: "#2b2140"
     }
+  });
+</script>
+<script id="graph-data" type="application/json">{"nodes":[{"id":"Bobby","kind":"owner"},{"id":"Broker connection","kind":"dept"},{"id":"Exchange API","kind":"external"},{"id":"Order engine","kind":"dept"},{"id":"Position tracker","kind":"dept"},{"id":"Front-end UI","kind":"dept"}],"links":[{"source":"Bobby","target":"Broker connection","type":"owner","blocking":"yes","mockable":"yes"},{"source":"Exchange API","target":"Broker connection","type":"external","blocking":"yes","mockable":"yes"},{"source":"Broker connection","target":"Order engine","type":"hard-internal","blocking":"yes","mockable":"yes"},{"source":"Broker connection","target":"Position tracker","type":"soft-internal","blocking":"no","mockable":"yes"},{"source":"Order engine","target":"Position tracker","type":"soft-internal","blocking":"no","mockable":"yes"},{"source":"Position tracker","target":"Front-end UI","type":"soft-internal","blocking":"no","mockable":"yes"},{"source":"Order engine","target":"Front-end UI","type":"soft-internal","blocking":"no","mockable":"yes"}]}</script>
+<script type="module">
+  import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+  const data = JSON.parse(document.getElementById("graph-data").textContent);
+  const svg = d3.select("#depweb");
+  const W = svg.node().clientWidth || 900, H = 540;
+  svg.attr("viewBox", `0 0 ${W} ${H}`);
+  const COLORS = { dept: "#6b4fd0", external: "#b0a9c2", owner: "#c9930a" };
+  const sim = d3.forceSimulation(data.nodes)
+    .force("link", d3.forceLink(data.links).id((d) => d.id).distance(115))
+    .force("charge", d3.forceManyBody().strength(-430))
+    .force("center", d3.forceCenter(W / 2, H / 2))
+    .force("collide", d3.forceCollide(48));
+  svg.append("defs").append("marker")
+    .attr("id", "arr").attr("viewBox", "0 -5 10 10")
+    .attr("refX", 24).attr("refY", 0).attr("markerWidth", 6).attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path").attr("d", "M0,-5L10,0L0,5").attr("fill", "#bfa8f0");
+  const link = svg.append("g").selectAll("line").data(data.links).join("line")
+    .attr("stroke", (d) => (d.blocking === "yes" ? "#e04f66" : "#bfa8f0"))
+    .attr("stroke-width", (d) => (d.blocking === "yes" ? 2.2 : 1.5))
+    .attr("stroke-dasharray", (d) => (d.mockable === "yes" ? "5 4" : null))
+    .attr("marker-end", "url(#arr)");
+  const drag = d3.drag()
+    .on("start", (e, d) => { if (!e.active) sim.alphaTarget(.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; });
+  const node = svg.append("g").selectAll("g").data(data.nodes).join("g").call(drag);
+  node.append("circle")
+    .attr("r", (d) => (d.kind === "dept" ? 20 : 13))
+    .attr("fill", (d) => COLORS[d.kind])
+    .attr("opacity", (d) => (d.kind === "dept" ? 1 : .8));
+  node.append("text")
+    .text((d) => d.id)
+    .attr("text-anchor", "middle")
+    .attr("y", (d) => (d.kind === "dept" ? 20 : 13) + 13)
+    .attr("font-size", (d) => (d.kind === "dept" ? 12 : 10.5))
+    .attr("font-weight", (d) => (d.kind === "dept" ? 800 : 600))
+    .attr("fill", "#2b2140");
+  node.append("title").text((d) => d.id);
+  sim.on("tick", () => {
+    link.attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y)
+        .attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+    node.attr("transform", (d) => `translate(${d.x},${d.y})`);
   });
 </script>
 </body>
