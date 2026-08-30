@@ -37,7 +37,6 @@ flowchart TD
   Q --> S{"Position flat<br>(moon bag aside)?"}
   S -- "❌" --> O
   S -- "✅" --> FIN["🧾 Log result — trade complete"]
-  D -.->|"⚠️ 6–24h band undefined — see Unresolved"| E
 ```
 
 ## This idea needs
@@ -84,7 +83,7 @@ Steps:
 1. Capture every tweet from the last 30 days, average likes + retweets into a baseline
 2. Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)
 3. Gate by tweet age: under 1 hour needs ≥ 3x; 1–6 hours needs ≥ 10x; 24 hours or more only passes at ≥ 50x (thresholds customizable in config)
-4. The 6–24 hour band is undefined — hold coins there until Bobby rules on it (see Unresolved)
+4. These three tiers are the complete rule — anything outside them (including the 6–24h window) is not considered: reject and log
 5. No-tweet candidates are not scored here — they go straight to Narrative analysis
 
 ### Narrative analysis
@@ -199,7 +198,7 @@ Steps:
 - Bobby → Callout intake | Supplies: tracked-source list (which traders/devs) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Trade executor | Supplies: Solana wallet + keys (secret reference) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Narrative analysis | Supplies: xAI API account (grok-4.6) | Type: owner | Blocking: yes | Mockable: yes
-- Bobby → Virality scorer | Supplies: X API access + multiplier tier values + ruling for the 6–24h band | Type: owner | Blocking: yes | Mockable: no
+- Bobby → Virality scorer | Supplies: X API access + multiplier tier values (3x / 10x / 50x) | Type: owner | Blocking: yes | Mockable: no
 - pump.fun / FOMO → Callout intake | Supplies: callout stream | Type: external | Blocking: yes | Mockable: yes
 - X API → Virality scorer | Supplies: 30-day tweet metrics | Type: external | Blocking: yes | Mockable: yes
 - xAI API → Narrative analysis | Supplies: narrative + scores | Type: external | Blocking: yes | Mockable: yes
@@ -269,7 +268,6 @@ MEMECOIN VIRALITY TRADER
 ```
 
 ## Unresolved
-- The 6–24 hour tweet-age band has no multiplier rule — bands given are <1h ≥3x, 1–6h ≥10x, ≥24h ≥50x. Material: coins in that window are on hold until Bobby sets the tier (same as 1–6h? flat ≥50x? reject?)
 - Bundler data provider choice — external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract
 - X API access — owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision
 - Chart data provider — external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal & trigger and Position manager
@@ -284,6 +282,7 @@ MEMECOIN VIRALITY TRADER
 - Step 1: Get a callout — track callouts from a group of traders or devs, usually on pump.fun or FOMO, via web or mobile. Step 2: Check the coin and tweet metrics — likes and retweets over 30 days for an average baseline, compare against the coin's tweet, check the multiplier; threshold customizable, hypothetically minimum 3x. Multiplier rule: if the tweet is over 50x its normal baseline, whether the coin is traded 24 hours later makes no difference, we still… [cut off]
 - Detailed bot logic: 1) Tweet/coin qualification — tweet within 1h of coin creation stays viable; minimum multiplier (3x over 30-day baseline) = potential runner. 2) Grok analysis — Grok 4.6 with pre-generated prompt: narrative, thesis, sentiment, veracity score, attention score via X search; combined score must be over 8. 3) Bundler verification — % share trending down/flat/up, 0% ideal; strict rule: nothing over 10-15% bundlers, ideally below 10%. 4) TA and trigger — pennant or descending triangle; breakout + OBV and/or RSI divergence inside the pattern; enter and set 30% stop-loss immediately. 5) Profit taking — at 2x withdraw initial capital; 20% of remaining profit as moon bag (manual only); clip the remaining 80% by selling 15-20% on each OBV/RSI divergence; only sell into volume (buy pressure, green candles).
 - Corrections: it's virality, not veracity. Score gate is dual — with a tweet the combined score must be 6; with no tweet it must be over 8. Delay exception: 24 hours or more is only acceptable at 50x multiplier or more. Age bands: under 1 hour → multiplier 3x or more; 1 to 6 hours → multiplier at least 10x.
+- Tiers restated as the complete rule: we look at tweets above their normal baseline combined with token creation time — under 1 hour: 3x above baseline; 1 to 6 hours: 10x above baseline; 24 hours plus: 50x above baseline. Anything outside these tiers (incl. 6–24h) is not considered.
 
 ## Consolidation report
 Departments: 10 candidates → 8 final (pattern + divergence merged into Signal & trigger — divergence only counts inside the pattern window, shared state; Kelly sizing demoted to Unsorted, not in the authoritative flow)
