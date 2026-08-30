@@ -100,9 +100,12 @@
   .sline .sic { flex: 0 0 auto; font-size: 14px; }
   .sline.sec { font-weight: 800; }
   .sline.mod .sname {
-    background: var(--lav); border: 1.5px solid #d9ccf7; border-radius: 8px;
-    padding: 2px 9px; font-weight: 700; color: var(--purple);
+    background: var(--lav); border: 2px solid #c9b8f2; border-radius: 8px;
+    padding: 3px 10px; font-weight: 800; font-size: 14px; color: var(--purple);
   }
+  .modstrip .pill { border-color: #d9ccf7; }
+  .modstrip .mname { color: var(--purple); }
+  .modstrip .mdept { color: var(--faint); font-weight: 600; font-size: 12px; }
   .sline.mod .mtype { font-size: 10.5px; color: var(--faint); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
   .sline.feat { color: var(--soft); }
   .sline.d1 { margin-left: 0; }
@@ -204,6 +207,11 @@
   <h2>🗂️ Departments — by parallel readiness</h2>
   {{DEPT_GROUPS}}
   <div class="report">{{REPORT}}</div>
+
+  <h2>🧩 Genuine modules — the real building blocks</h2>
+  <div class="needs modstrip">
+    {{MODULES}}
+  </div>
 
   <h2>🔀 Integration map — who hands what to whom</h2>
   <div class="diagram">

@@ -217,6 +217,15 @@ function renderHtml(p, issue) {
   const snapsHtml = p.snaps.length ? p.snaps.map((s, i) => `
 <div class="snaprow">${snapBadge(s.score)}<span class="conn">${i + 1}. ${esc(s.conn)}</span><span class="detail">${esc(s.why)}${s.work ? ` — <b>needs:</b> ${esc(s.work)}` : ""}</span></div>`).join("\n")
     : `<div class="snaprow"><span class="detail">No connections ranked yet.</span></div>`;
+  const allMods = [];
+  const walkMods = (nodes, dept) => nodes.forEach((n) => {
+    if (n.type === "module") allMods.push({ name: n.name, dept, mtype: n.mtype });
+    walkMods(n.children, dept);
+  });
+  p.depts.forEach((d) => walkMods(d.structure, d.name));
+  const modulesHtml = allMods.length
+    ? allMods.map((m) => `<span class="pill">🧩 <span class="mname">${esc(m.name)}</span> <span class="mdept">${esc(m.dept)}${m.mtype ? " · " + esc(m.mtype) : ""}</span></span>`).join("")
+    : '<span class="pill">No genuine modules identified yet</span>';
   const itemHtml = (u) => {
     const [what, ...rest] = u.split(/\s+—\s+/);
     return `<div class="item"><span>${esc(what)}</span>${rest.length ? `<span class="why">${esc(rest.join(" — "))}</span>` : ""}</div>`;
@@ -237,6 +246,7 @@ function renderHtml(p, issue) {
     .replace("{{FLOW}}", p.flow || "flowchart TD\n  A[No operating flow yet]")
     .replace("{{DEPT_GROUPS}}", groups || "<p>No departments yet.</p>")
     .replace("{{REPORT}}", esc(p.report) || "")
+    .replace("{{MODULES}}", modulesHtml)
     .replace("{{MERMAID}}", p.mermaid || "flowchart TD\n  A[No diagram yet]")
     .replace("{{GROUPS}}", pgroups)
     .replace("{{DEPS}}", depsHtml)

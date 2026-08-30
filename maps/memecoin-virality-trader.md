@@ -2,204 +2,330 @@
 Status: open
 Updated: 2026-08-30
 Emoji: 🪙
+System: greenfield
+Recommended: 8 departments, 10 sections, 7 genuine modules
 
-Two clean flows: one scores a called coin's virality to decide if it deserves attention, the other executes the trade and manages the exit ladder.
+Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a viral tweet, a high Grok score, clean bundlers, and a chart breakout with divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
+
+## Operating flow
+```mermaid
+flowchart TD
+  A["📣 Callout arrives — tracked trader/dev calls a coin<br>on pump.fun or FOMO (web + mobile)"] --> B{"⏱️ Tweet posted within<br>1 hour of coin creation?"}
+  B -- "❌ Older" --> R1["🚫 Reject — log reason"]
+  B -- "✅ Within 1h" --> C["📊 Build 30-day baseline:<br>capture every tweet, average likes + retweets"]
+  C --> D{"✖️ Multiplier — this tweet vs baseline<br>≥ 3x? (threshold customizable)"}
+  D -- "❌ Below" --> R2["🚫 Reject — log reason"]
+  D -- "✅ ≥ 3x — potential runner" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, veracity score,<br>attention score via X search"]
+  E --> F{"🧮 Combined score<br>> 8?"}
+  F -- "❌ ≤ 8" --> R3["🚫 Reject — log reason"]
+  F -- "✅ > 8" --> G["🧬 Bundler check:<br>% share of supply + trend (down / flat / up)"]
+  G --> H{"🚫 Bundlers<br>> 10–15%?"}
+  H -- "❌ Too many" --> R4["🚫 Reject — log reason"]
+  H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>pennant or descending triangle forming"]
+  I --> J{"💥 Breakout + OBV and/or RSI<br>divergence inside the pattern?"}
+  J -- "⏳ Not yet" --> I
+  J -- "✅ Trigger" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
+  K --> L{"📈 Price reaches<br>2x?"}
+  L -- "⏳" --> L
+  L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
+  M --> N["🌙 20% of remaining profit → moon bag<br>(never auto-sold — manual only)"]
+  N --> O{"🔀 OBV or RSI divergence<br>(ideally both)?"}
+  O -- "⏳ No" --> O
+  O -- "✅ Yes" --> P{"🟢 Buy pressure?<br>green candle + volume"}
+  P -- "❌ Wait" --> P
+  P -- "✅ Sell into volume" --> Q["✂️ Clip 15–20% of remaining 80%"]
+  Q --> S{"Position flat<br>(moon bag aside)?"}
+  S -- "❌" --> O
+  S -- "✅" --> T["🧾 Log result — trade complete"]
+  D -.->|"⚠️ >50x rule: action cut off in spec — see Unresolved"| E
+```
 
 ## This idea needs
-1. Virality scoring gate
-2. Watch monitoring
-3. Pattern detection
-4. Divergence validation
-5. Position management
-6. Full logging
+1. Callout intake (pump.fun / FOMO sources)
+2. Virality scorer (30-day baseline + multiplier gate)
+3. Narrative analysis (Grok 4.6, combined score > 8)
+4. Bundler checker (strict ≤10–15% rule)
+5. Signal & trigger (pattern + divergence + 30% stop)
+6. Trade executor (Solana, sell-into-volume)
+7. Position manager (2x rule, moon bag, clip ladder)
+8. Trade journal (every gate + fill logged)
 
 ## Departments
 
-### Virality scorer
-Readiness: now
-Icon: 📈
-One pipeline that takes a call from "someone called it" to "qualified or dropped" — intake and scoring share the coin's lifecycle, so they stay together.
-Owns: vetted-source calls, tweet check, ScrapingDog 30-day baseline, virality multiplier, Grok combined score, 6.5/8 threshold gate
+### Callout intake
+Readiness: ready-mocks
+Icon: 📣
+Responsibility: Detect and normalize every callout from the tracked traders/devs into one candidate shape the pipeline can score.
+Starts when: the tracked-source list is configured (owner-supplied)
+Completes when: a normalized candidate (coin address, attached tweet, callout timestamp, source) streams in real time
+Boundary: owns source adapters and normalization; does not own scoring or trading
+Owns: callout tracking, pump.fun / FOMO sources, web + mobile ingestion
+Inputs: tracked-source list (owner), callout streams (external)
+Outputs: normalized candidate → Virality scorer
 Needs from: nothing
 Steps:
-1. Listen for calls from vetted sources (a vetted source = a caller or group Bobby has pre-approved)
-2. Check if the call has a tweet attached
-3. If there is a tweet: pull a 30-day baseline via ScrapingDog (a web-scraping API) and compute the virality multiplier — how far engagement is running above its own normal
-4. Send coin data plus the multiplier to Grok (xAI's model, used here as the scoring brain) for a combined score
-5. Gate: 6.5+ with a tweet, 8+ without → promote to watch; otherwise drop the coin
+1. Configure the tracked traders/devs list (which callers count — owner input)
+2. Listen on pump.fun and FOMO channels (web + mobile sources)
+3. Normalize each callout: coin address, attached tweet, timestamp, source
+4. Emit the candidate to the Virality scorer
 
-### Watch monitor
-Readiness: after-contract
-Icon: 👁️
-Owns the surveillance phase: is this coin's holder base healthy enough to keep watching?
-Owns: holder quality (bundlers, snipers, reduction trend), age-based chart timeframe, monitor until setup or death
+### Virality scorer
+Readiness: ready-mocks
+Icon: 📊
+Responsibility: Decide whether the callout's tweet is abnormally hot versus its own history — the tweet/coin qualification gate.
+Starts when: a normalized candidate arrives
+Completes when: candidates are passed (viable + ≥3x) or rejected with a logged reason
+Boundary: owns the 30-day baseline and multiplier math; does not own narrative judgment or chart work
+Owns: 30-day baseline, virality multiplier, customizable threshold, 1-hour viability window
+Inputs: normalized candidate (Callout intake), tweet metrics (X API — external)
+Outputs: qualified candidate + multiplier → Narrative analysis
+Needs from: Callout intake
+Steps:
+1. Gate 1 — tweet age: reject if the tweet is older than 1 hour after coin creation
+2. Capture every tweet from the last 30 days, average likes + retweets into a baseline
+3. Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)
+4. Gate 2 — multiplier ≥ threshold (3x to start; customizable in config)
+5. Implement the >50x rule once Bobby completes it (see Unresolved)
+
+### Narrative analysis
+Readiness: ready-mocks
+Icon: 🧠
+Responsibility: Judge what the coin *is* and whether the attention is real — the AI scoring gate.
+Starts when: a ≥3x candidate arrives
+Completes when: a combined score (>8 pass / ≤8 reject) is attached with narrative + thesis
+Boundary: owns the Grok prompt, the five extracted scores, and the combine rule; does not own raw tweet collection
+Owns: pre-generated prompt, narrative, thesis, sentiment, veracity score, attention score, combined score, >8 gate
+Inputs: qualified candidate (Virality scorer), Grok 4.6 API (external, owner account)
+Outputs: scored candidate → Bundler checker
 Needs from: Virality scorer
 Steps:
-1. Pin the contract with Virality scorer: the qualified-coin payload (coin ID, score, tweet data)
-2. Check holder quality: bundlers (wallets that bought in the same block as launch), snipers (bots that buy in the first seconds), and the reduction trend (are early wallets selling off?)
-3. Open the chart on the age-based timeframe (candle size matched to how old the coin is)
-4. Keep monitoring: hand the coin on when a setup starts forming, or drop it if it dies
+1. Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt
+2. Extract: narrative, thesis, sentiment, veracity score (tweet vs baseline), attention score (X search across Twitter)
+3. Combine into one score
+4. Gate 3 — combined score > 8 → pass; otherwise reject and log
 
-### Pattern engine
-Readiness: after-contract
-Icon: 📐
-Pure chart-geometry team: finds the setup and fires the breakout event. Nothing else draws on charts.
-Owns: descending triangle / pennant detection, pattern start marking, breakout wait
-Needs from: Watch monitor
+### Bundler checker
+Readiness: ready-mocks
+Icon: 🧬
+Responsibility: Verify the coin's holder base isn't rigged — the strict bundler gate.
+Starts when: a >8 candidate arrives
+Completes when: bundler % + trend are attached; coins over the limit are rejected with a logged reason
+Boundary: owns bundler data and the trend call; does not own chart or narrative work
+Owns: bundler % share, trend direction (down / flat / up), ≤10–15% strict rule
+Inputs: scored candidate (Narrative analysis), bundler data (chain analytics — external)
+Outputs: clean candidate → Signal & trigger
+Needs from: Narrative analysis
 Steps:
-1. Pin the contract with Watch monitor: the watch-list feed (live coins plus chart data)
-2. Detect a descending triangle or a pennant (both = price squeezing into a tighter range before a move)
-3. Mark the pattern start — all later divergence checks only look inside this window
-4. Wait for the breakout (price leaving the pattern) and emit a breakout event
+1. Pull the bundler share: wallets that bought in the creation block and their supply %
+2. Read the full block and exclude program-owned accounts (the bonding curve) — tools disagree on this number, so the counting method is pinned here
+3. Classify the trend: decreasing, stagnating, or increasing (0% ideal)
+4. Gate 4 — strict: reject anything over 10–15% bundlers (below 10% preferred), especially if increasing
 
-### Divergence validator
-Readiness: after-contract
-Icon: 🔀
-The only department that compares price against oscillators — both for the entry check and for exit warnings while holding.
-Owns: two-leg divergence check, pivot 1 & 2 detection, price vs OBV/RSI comparison, recurring bearish-divergence flags
-Needs from: Pattern engine
+### Signal & trigger
+Readiness: contract
+Icon: 📈
+Responsibility: Watch clean candidates' charts and fire the entry only when pattern and divergence agree. One team, because the divergence check only counts inside the pattern window — shared state.
+Starts when: the qualified-candidate contract is frozen
+Completes when: a validated entry signal fires (pattern + breakout + divergence) or the coin dies unwatched
+Boundary: owns chart geometry and oscillators; does not own order execution
+Owns: pennant / descending-triangle detection, breakout watch, OBV divergence, RSI divergence, entry trigger, immediate 30% stop rule
+Inputs: clean candidate (Bundler checker), chart data OHLC + OBV/RSI (chart provider — external)
+Outputs: trade intent (entry + 30% stop) → Trade executor; bearish divergences while holding → Position manager
+Needs from: Bundler checker
 Steps:
-1. Pin the contract with Pattern engine: pattern window plus breakout event
-2. On breakout, look only inside the pattern for a two-leg divergence: find pivot 1 and pivot 2 (swing points)
-3. Compare price vs OBV (on-balance volume = running total of volume direction) or RSI (relative strength index = momentum gauge) across the two pivots
-4. Valid divergence → emit an entry signal; invalid → pass on the coin
-5. While a position is open, keep flagging qualifying bearish divergences (price makes a higher high, the oscillator doesn't) as exit signals
+1. Pin the contract with Bundler checker: clean-candidate payload
+2. Detect a pennant or descending triangle (price squeezing into a tighter range); prefer descending triangle
+3. Mark the pattern start — divergence checks only count inside this window, never far back
+4. Wait for the breakout; on breakout, confirm OBV divergence, RSI divergence, or both inside the pattern
+5. Fire the entry signal with an immediate 30% stop-loss attached
+
+### Trade executor
+Readiness: waiting-owner
+Icon: ⚡
+Responsibility: The only department that moves money — enters and exits on Solana, and only ever sells into buy pressure.
+Starts when: Bobby supplies the Solana wallet + keys (owner dependency) and the trade-intent contract is frozen
+Completes when: entries and exits fill correctly on devnet, including the sell-into-volume rule
+Boundary: owns transaction construction and fills; does not own when or why to trade
+Owns: entries, exits, sell-into-volume filter (green candle + volume only), fill reporting
+Inputs: trade intent (Signal & trigger), clip orders (Position manager), wallet keys (owner)
+Outputs: fills → Position manager, Trade journal
+Needs from: Signal & trigger
+Steps:
+1. Receive the Solana wallet + keys from Bobby (referenced by secret name, never stored raw)
+2. Execute the entry when a trade intent arrives
+3. Execute exits only into buy pressure: green candles and real volume, never into red
+4. Report every fill with price, size, and timestamp
 
 ### Position manager
-Readiness: waiting
-Icon: 💼
-Owns the whole position lifecycle from sizing to the moon bag — entry, stop, and scale-outs share state and a transaction boundary, so they are one team.
-Owns: fractional Kelly sizing, entry, 30% stop, 2X capital recovery, 15% divergence scale-outs, moon bag handoff
-Needs from: Divergence validator
+Readiness: contract
+Icon: 💰
+Responsibility: Run the fixed exit ladder from entry to flat — 2x rule, moon bag, and the clip strategy. One team because the ladder shares position state across every step.
+Starts when: the first fill arrives from the Trade executor
+Completes when: the position (moon bag aside) is flat and the result is logged
+Boundary: owns the ladder and its state; does not own signal detection or transaction building
+Owns: 2x initial-capital recovery, 20% moon bag rule, 15–20% divergence clips, position state
+Inputs: fills (Trade executor), bearish divergences (Signal & trigger), live price + volume (chart provider — shared foundation)
+Outputs: clip orders → Trade executor; results → Trade journal; moon bag → Bobby (manual)
+Needs from: Trade executor
 Steps:
-1. Pin the contract with Divergence validator: entry-signal and exit-signal shapes
-2. Size the entry with fractional Kelly (Kelly = a formula for optimal bet size from win rate and odds; fractional = deliberately use only a slice of it, safer)
-3. Enter and set a 30% stop (auto-sell if price falls 30% below entry, capping the loss)
-4. At 2X: sell enough to recover the initial capital and cancel the stop — from here it's house money
-5. On each qualifying bearish divergence: sell about 15% of what's left; repeat until only the moon bag remains
-6. Moon bag is manual — hand it off to Bobby and close out the managed position
+1. Pin the contract with Trade executor: fill events and clip-order shape
+2. At 2x: withdraw the initial capital — from here it is house money
+3. Set aside 20% of the remaining profit as the moon bag (never auto-sold; manual at Bobby's discretion)
+4. On each OBV/RSI divergence (ideally both): order a clip of 15–20% of the remaining 80%, routed through the executor's sell-into-volume filter
+5. Repeat until flat; log the result and hand the moon bag to Bobby
 
 ### Trade journal
-Readiness: after-contract
+Readiness: ready-mocks
 Icon: 📓
-Everything logged, one place: scores, gate decisions, watch events, signals, fills.
-Owns: full event logging
+Responsibility: One queryable record of everything — every gate decision, score, watch event, signal, and fill.
+Starts when: the log schema contract is pinned
+Completes when: any coin or trade can be replayed end to end from the log
+Boundary: owns the log schema and storage; does not own the events themselves
+Owns: gate decisions, scores, watch events, signals, fills, per-coin and per-trade queries
+Inputs: events from every department (shared foundation)
+Outputs: replayable history → Bobby, debugging, future backtesting
 Needs from: nothing — every department writes to it
 Steps:
-1. Pin the log schema contract (event types and fields) that every other department writes against
-2. Record scores, gate decisions, watch events, entry/exit signals, and every fill
+1. Pin the log schema contract (event types and fields) that every department writes against
+2. Record scores, gate accept/reject reasons, watch events, entry/exit signals, and every fill
 3. Make the log queryable per coin and per trade
 
+## Correlated parallel groups
+- Group: Qualification gauntlet | Members: Callout intake + Virality scorer + Narrative analysis + Bundler checker | Snap: 4 | Mode: frozen-contract | Contract: candidate schema + gate order + pass/fail payload | Risk: four gates built with different assumptions about the candidate fields
+- Group: Trigger & execution | Members: Signal & trigger + Trade executor | Snap: 4 | Mode: frozen-contract | Contract: TradeIntent (entry + 30% stop) + idempotency rule | Risk: slippage and timing on pump.fun entries — a stale trigger fires a bad fill
+- Group: Exit management | Members: Trade executor + Position manager | Snap: 5 | Mode: frozen-contract | Contract: fill-event schema | Risk: a missed fill corrupts the ladder state (moon bag vs clip split goes wrong)
+
+## Dependency matrix
+- Bobby → Callout intake | Supplies: tracked-source list (which traders/devs) | Type: owner | Blocking: yes | Mockable: yes
+- Bobby → Trade executor | Supplies: Solana wallet + keys (secret reference) | Type: owner | Blocking: yes | Mockable: yes
+- Bobby → Narrative analysis | Supplies: xAI API account (grok-4.6) | Type: owner | Blocking: yes | Mockable: yes
+- Bobby → Virality scorer | Supplies: X API access + multiplier threshold + >50x rule decision | Type: owner | Blocking: yes | Mockable: no
+- pump.fun / FOMO → Callout intake | Supplies: callout stream | Type: external | Blocking: yes | Mockable: yes
+- X API → Virality scorer | Supplies: 30-day tweet metrics | Type: external | Blocking: yes | Mockable: yes
+- xAI API → Narrative analysis | Supplies: narrative + scores | Type: external | Blocking: yes | Mockable: yes
+- Chain analytics → Bundler checker | Supplies: bundler % + trend | Type: external | Blocking: yes | Mockable: yes
+- Chart provider → Signal & trigger | Supplies: OHLC + OBV/RSI | Type: external | Blocking: yes | Mockable: yes
+- Chart provider → Position manager | Supplies: live price + volume + divergences | Type: shared-foundation | Blocking: yes | Mockable: yes
+- Callout intake → Virality scorer | Supplies: normalized candidate | Type: soft-internal | Blocking: no | Mockable: yes
+- Virality scorer → Narrative analysis | Supplies: qualified candidate (viable + ≥3x) | Type: soft-internal | Blocking: no | Mockable: yes
+- Narrative analysis → Bundler checker | Supplies: scored candidate (>8) | Type: soft-internal | Blocking: no | Mockable: yes
+- Bundler checker → Signal & trigger | Supplies: clean candidate | Type: soft-internal | Blocking: no | Mockable: yes
+- Signal & trigger → Trade executor | Supplies: trade intent + 30% stop | Type: soft-internal | Blocking: no | Mockable: yes
+- Trade executor → Position manager | Supplies: fills | Type: soft-internal | Blocking: no | Mockable: yes
+- All departments → Trade journal | Supplies: events | Type: shared-foundation | Blocking: no | Mockable: yes
+
+## Snap ranking
+1. Trade executor → Position manager — Snap 5 — fills feed the ladder directly through one event schema — freeze the fill-event contract first
+2. Signal & trigger → Trade executor — Snap 4 — one trade-intent object with the stop attached — pin TradeIntent + idempotency rule
+3. Virality scorer → Narrative analysis — Snap 4 — candidate passes with its metrics attached — freeze the candidate schema
+4. Callout intake → Virality scorer — Snap 3 — needs the normalized coin+tweet shape — define the normalizer output
+5. Narrative analysis → Bundler checker — Snap 3 — pass-through plus the Grok scores — extend the candidate schema
+6. Bundler checker → Signal & trigger — Snap 3 — clean candidate with bundler verdict attached — extend the candidate schema again
+7. Chart provider → Signal & trigger + Position manager — Snap 3 — two consumers of one provider — pick the provider early; it is a shared foundation
+
 ## Parallel readiness
-- Can start in parallel now: Virality scorer
-- Can start in parallel after contract definition: Watch monitor, Pattern engine, Divergence validator, Trade journal
+- Can start in parallel now: Callout intake, Virality scorer, Narrative analysis, Bundler checker, Trade journal (all with mocks)
+- Can start in parallel after contract definition: Signal & trigger, Position manager
 - Must perform joint design first: —
-- Must wait for another department: Position manager (waits on Divergence validator)
-- Blocked by external or owner dependency: —
+- Must wait for another department: —
+- Blocked by external or owner dependency: Trade executor (waits on Bobby's Solana wallet + keys)
 
 ## Structure tree
 ```
-MEMECOIN TRADER
+MEMECOIN VIRALITY TRADER
+├── CALLOUT INTAKE
+│   └── Source adapters (section)
+│       ├── callout listener (module: external-adapter)
+│       └── candidate normalizer (feature)
 ├── VIRALITY SCORER
-│   ├── Intake (section)
-│   │   └── vetted-source listener (feature)
-│   ├── Scoring (section)
-│   │   ├── tweet baseline engine (module)
-│   │   │   ├── ScrapingDog 30-day baseline (feature)
-│   │   │   └── virality multiplier (feature)
-│   │   └── Grok combined score (feature)
-│   └── Gate (section)
-│       └── 6.5 / 8 threshold rule (feature)
-├── WATCH MONITOR
-│   ├── Holder quality (section)
-│   │   └── holder analyzer (module)
-│   │       ├── bundler detection (feature)
-│   │       ├── sniper detection (feature)
-│   │       └── reduction trend (feature)
-│   └── Surveillance (section)
-│       ├── age-based chart timeframe (feature)
-│       └── setup-or-death loop (feature)
-├── PATTERN ENGINE
-│   └── Chart patterns (section)
-│       ├── pattern detector (module)
-│       │   ├── descending triangle (feature)
-│       │   └── pennant (feature)
-│       ├── pattern start marker (feature)
-│       └── breakout watcher (feature)
-├── DIVERGENCE VALIDATOR
-│   └── Two-leg divergence (section)
-│       ├── pivot finder (feature)
-│       ├── price vs OBV/RSI comparator (feature)
-│       └── bearish-divergence flagger (feature)
+│   └── Baseline engine (section)
+│       ├── 30-day baseline calculator (module: project-specific)
+│       ├── 1-hour viability check (feature)
+│       └── multiplier threshold (configuration value)
+├── NARRATIVE ANALYSIS
+│   └── Grok scoring (section)
+│       ├── Grok adapter (module: external-adapter)
+│       └── score combiner (feature)
+├── BUNDLER CHECKER
+│   └── Holder verification (section)
+│       ├── bundler data adapter (module: external-adapter)
+│       └── trend classifier (feature)
+├── SIGNAL & TRIGGER
+│   └── Setup watcher (section)
+│       ├── chart setup detector (module: project-specific)
+│       └── entry trigger + 30% stop (feature)
+├── TRADE EXECUTOR
+│   └── On-chain execution (section)
+│       ├── Solana execution adapter (module: external-adapter)
+│       └── sell-into-volume filter (feature)
 ├── POSITION MANAGER
-│   ├── Entry (section)
-│   │   ├── fractional Kelly sizer (feature)
-│   │   └── 30% stop (feature)
 │   └── Exit ladder (section)
-│       ├── 2X capital recovery (feature)
-│       ├── 15% divergence scale-out (feature)
-│       └── moon bag handoff (feature)
+│       ├── exit ladder state machine (module: project-specific)
+│       ├── moon bag vault (feature)
+│       └── divergence clipper (feature)
 └── TRADE JOURNAL
     └── Event log (section)
-        └── journal logger (module)
-            └── per-coin / per-trade queries (feature)
+        └── per-coin / per-trade queries (feature)
 ```
 
 ## Unresolved
-- Market & on-chain data provider — external dependency choice (Birdeye, Helius, Dexscreener…): supplies chart, OBV, and holder/bundler data; if it takes more than one API it may need its own Market data feed department — changes boundaries
-- Vetted source list — owner-supplied input: which callers or groups count as vetted; shapes the intake adapter
-- ScrapingDog + Grok API keys — owner-supplied input: scorer can't run without them
-- Execution venue — external dependency choice: which exchange/DEX the Position manager trades on; possibly reuses the Trading bot idea's broker connection (issue #1)
-- Moon bag size — owner-supplied input: how much remains when the 15% ladder stops
-- Exit-divergence rules — contract question: do the same two-leg rules qualify a bearish divergence while holding, or a looser set?
-- Kelly inputs — owner-supplied input + contract gap: fractional Kelly needs three things no department currently produces — the bankroll figure it sizes against, an estimated win probability and payoff (from backtest results or a fixed assumption), and the chosen fraction (half-Kelly? quarter?). Position manager cannot size a trade until these are pinned
+- The >50x multiplier rule is cut off in the spec ("whether the coin is traded 24 hours later makes no difference, we still…") — material: could add an auto-qualify bypass around the Grok gate; Bobby to complete the rule
+- Bundler data provider choice — external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract
+- X API access — owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision
+- Chart data provider — external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal & trigger and Position manager
+- Tweet metric source — external choice: X API directly or a scraper (the earlier draft used ScrapingDog); pick one for the baseline engine
+- Moon bag handling — owner input: where it lives and how Bobby sells it manually (dashboard, wallet, or nothing to build)
 
 ## Unsorted
-- —
+- Fractional Kelly sizing — from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says
+- 6.5/8 dual threshold (with/without tweet) — from the earlier draft; the new flow uses a single >8 gate plus a separate 3x multiplier gate; parked in case the dual rule was intentional
 
 ## Raw log
-- Okay. So, full workflow, end to end. Workflow one, research and qualification. Call out from a vetted source. If theres a tweet, run a thirty-day ScrapingDog baseline and compute virality multiplier. Send that to Grok for combined score. If it passes, andthose thresholds are six point five-plus with tweet, eight-plus without, then move into watch. During watch, check holder quality. Bundlers, snipers, reduction trend, and open the chart on the age-based time frame. Keep monitoring until a setup appears or the coin dies. Workflow two, execution. Detect descending triangle or pennant, mark pattern start, wait for breakout. After breakout, check only inside that pattern for a valid two-leg divergence, your first and second pivots, price versus OBV or RSI. If valid, size with fractional Kelly, enter, set 30% stop. At 2X, remove initial capital and remove the stop. Then on each qualifying bearish divergence, sell about 15% of the remaining. Repeat that until only the moon bag remains. Moon bag is manual. Everything logged. Two clean flows, one that decides if a coin deserves attention, and one that executes and manages. That separation ought to make the dev spec and your testing a lot easier and
+- Full workflow, end to end. Call out from a vetted source → tweet 30-day baseline + virality multiplier → Grok combined score (6.5+ with tweet, 8+ without) → watch: holder quality (bundlers, snipers, reduction trend), age-based chart → setup: descending triangle or pennant, pattern start, breakout → two-leg divergence inside pattern (pivots, price vs OBV/RSI) → entry, fractional Kelly, 30% stop → 2X recover initial, cancel stop → 15% sells per bearish divergence → moon bag manual
+- Step 1: Get a callout — track callouts from a group of traders or devs, usually on pump.fun or FOMO, via web or mobile. Step 2: Check the coin and tweet metrics — likes and retweets over 30 days for an average baseline, compare against the coin's tweet, check the multiplier; threshold customizable, hypothetically minimum 3x. Multiplier rule: if the tweet is over 50x its normal baseline, whether the coin is traded 24 hours later makes no difference, we still… [cut off]
+- Detailed bot logic: 1) Tweet/coin qualification — tweet within 1h of coin creation stays viable; minimum multiplier (3x over 30-day baseline) = potential runner. 2) Grok analysis — Grok 4.6 with pre-generated prompt: narrative, thesis, sentiment, veracity score, attention score via X search; combined score must be over 8. 3) Bundler verification — % share trending down/flat/up, 0% ideal; strict rule: nothing over 10-15% bundlers, ideally below 10%. 4) TA and trigger — pennant or descending triangle; breakout + OBV and/or RSI divergence inside the pattern; enter and set 30% stop-loss immediately. 5) Profit taking — at 2x withdraw initial capital; 20% of remaining profit as moon bag (manual only); clip the remaining 80% by selling 15-20% on each OBV/RSI divergence; only sell into volume (buy pressure, green candles).
 
 ## Consolidation report
-Departments: 10 candidates → 6 final (call intake folded into Virality scorer — one pipeline; Kelly sizing and scale-outs stay inside Position manager on shared-lifecycle grounds; tweet team and holder-quality team absorbed into scorer and watch monitor)
-Modules: 4 candidates → 4 genuine (tweet baseline engine, holder analyzer, pattern detector, journal logger)
+Departments: 10 candidates → 8 final (pattern + divergence merged into Signal & trigger — divergence only counts inside the pattern window, shared state; Kelly sizing demoted to Unsorted, not in the authoritative flow)
+Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)
 
 ## Diagram
 ```mermaid
 flowchart TD
-  subgraph SCORE["📈 1 · Virality scorer"]
-    S1["📥 Vetted-source call"] --> S2["🐦 Tweet? → 30-day ScrapingDog baseline"]
-    S2 --> S3["✖️ Virality multiplier"]
-    S3 --> S4["🧠 Grok combined score"]
-    S4 --> S5["🚦 Gate: 6.5+ with tweet · 8+ without"]
+  subgraph INTAKE["📣 1 · Callout intake"]
+    I1["👂 Listen: pump.fun / FOMO"] --> I2["🧾 Normalize candidate"]
   end
-  subgraph WATCH["👁️ 2 · Watch monitor"]
-    W1["🔍 Holder quality: bundlers, snipers, reduction trend"] --> W2["📊 Age-based chart timeframe"]
-    W2 --> W3["⏳ Monitor until setup or death"]
+  subgraph SCORE["📊 2 · Virality scorer"]
+    V1["⏱️ 1h viability"] --> V2["📉 30-day baseline"] --> V3["✖️ Multiplier ≥ 3x"]
   end
-  subgraph PATTERN["📐 3 · Pattern engine"]
-    P1["📉 Detect descending triangle / pennant"] --> P2["📌 Mark pattern start"]
-    P2 --> P3["💥 Wait for breakout"]
+  subgraph GROK["🧠 3 · Narrative analysis"]
+    G1["🧠 Grok 4.6 prompt"] --> G2["🧮 Combined score > 8"]
   end
-  subgraph DIV["🔀 4 · Divergence validator"]
-    D1["🦵 Find pivots 1 & 2 — inside pattern only"] --> D2["⚖️ Two-leg divergence: price vs OBV / RSI"]
+  subgraph BUND["🧬 4 · Bundler checker"]
+    B1["🔍 % share + trend"] --> B2["🚫 ≤ 10–15% rule"]
   end
-  subgraph POS["💼 5 · Position manager"]
-    M1["🎲 Fractional Kelly sizing"] --> M2["🟢 Enter + 30% stop"]
-    M2 --> M3["✌️ At 2X: remove initial capital, cancel stop"]
-    M3 --> M4["📉 Sell 15% per bearish divergence"]
-    M4 --> M5["🌙 Moon bag — manual"]
+  subgraph SIG["📈 5 · Signal & trigger"]
+    T1["📐 Pattern watch"] --> T2["💥 Breakout + divergence"] --> T3["🟢 Entry + 30% stop"]
   end
-  subgraph LOG["📓 6 · Trade journal"]
-    L1["✍️ Log everything: scores, signals, fills"]
+  subgraph EXEC["⚡ 6 · Trade executor"]
+    X1["💥 Entries"] --> X2["🟢 Exits into volume only"]
   end
-  S5 ==> W1
-  W3 ==> P1
-  P3 ==> D1
-  D2 ==> M1
-  D2 -.->|bearish divergence| M4
-  S4 -.-> L1
-  W3 -.-> L1
-  M2 -.-> L1
-  M4 -.-> L1
+  subgraph POS["💰 7 · Position manager"]
+    P1["✌️ 2x: withdraw initial"] --> P2["🌙 20% moon bag"] --> P3["✂️ Clip 15–20% per divergence"]
+  end
+  subgraph LOG["📓 8 · Trade journal"]
+    L1["✍️ Log everything"]
+  end
+  I2 ==> V1
+  V3 ==> G1
+  G2 ==> B1
+  B2 ==> T1
+  T3 ==> X1
+  X2 ==> P1
+  T2 -.->|bearish divergence while holding| P3
+  V3 -.-> L1
+  G2 -.-> L1
+  B2 -.-> L1
+  X1 -.-> L1
+  P3 -.-> L1
 ```
