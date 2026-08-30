@@ -226,6 +226,21 @@ function renderHtml(p, issue) {
   const modulesHtml = allMods.length
     ? allMods.map((m) => `<span class="pill">🧩 <span class="mname">${esc(m.name)}</span> <span class="mdept">${esc(m.dept)}${m.mtype ? " · " + esc(m.mtype) : ""}</span></span>`).join("")
     : '<span class="pill">No genuine modules identified yet</span>';
+  const nodeKind = (name) =>
+    name.toLowerCase() === "bobby" ? "owner"
+    : p.depts.some((d) => d.name.toLowerCase() === name.toLowerCase()) ? "dept" : "external";
+  const gNodes = new Map();
+  const gLinks = [];
+  const addNode = (name) => { if (name && !gNodes.has(name)) gNodes.set(name, { id: name, kind: nodeKind(name) }); };
+  for (const d of p.deps) {
+    const prods = d.prod.toLowerCase() === "all departments" ? p.depts.map((x) => x.name) : [d.prod];
+    for (const pr of prods) {
+      addNode(pr); addNode(d.cons);
+      gLinks.push({ source: pr, target: d.cons, type: d.type, blocking: d.blocking, mockable: d.mockable });
+    }
+  }
+  p.depts.forEach((d) => addNode(d.name));
+  const graphJson = JSON.stringify({ nodes: [...gNodes.values()], links: gLinks }).replace(/</g, "\\u003c");
   const itemHtml = (u) => {
     const [what, ...rest] = u.split(/\s+—\s+/);
     return `<div class="item"><span>${esc(what)}</span>${rest.length ? `<span class="why">${esc(rest.join(" — "))}</span>` : ""}</div>`;
@@ -250,6 +265,7 @@ function renderHtml(p, issue) {
     .replace("{{MERMAID}}", p.mermaid || "flowchart TD\n  A[No diagram yet]")
     .replace("{{GROUPS}}", pgroups)
     .replace("{{DEPS}}", depsHtml)
+    .replace("{{GRAPH_JSON}}", graphJson)
     .replace("{{SNAPS}}", snapsHtml)
     .replace("{{UNRESOLVED}}", unresolvedHtml)
     .replace("{{UNSORTED}}", unsortedHtml);
