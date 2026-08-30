@@ -228,7 +228,6 @@ flowchart TD
   Q --> S{"Position flat<br>(moon bag aside)?"}
   S -- "❌" --> O
   S -- "✅" --> FIN["🧾 Log result — trade complete"]
-  D -.->|"⚠️ 6–24h band undefined — see Unresolved"| E
     </pre>
   </div>
 
@@ -263,7 +262,7 @@ flowchart TD
   <div class="chips"><span class="chip">30-day baseline</span><span class="chip">virality multiplier</span><span class="chip">age-band tiers (&lt;1h ≥ 3x · 1–6h ≥ 10x · ≥24h ≥ 50x)</span><span class="chip">customizable thresholds</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Baseline engine</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">30-day baseline calculator</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">age × multiplier band check</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">multiplier tiers (configuration value)</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Capture every tweet from the last 30 days, average likes + retweets into a baseline</li><li>Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)</li><li>Gate by tweet age: under 1 hour needs ≥ 3x; 1–6 hours needs ≥ 10x; 24 hours or more only passes at ≥ 50x (thresholds customizable in config)</li><li>The 6–24 hour band is undefined — hold coins there until Bobby rules on it (see Unresolved)</li><li>No-tweet candidates are not scored here — they go straight to Narrative analysis</li></ol>
+  <ol class="steps"><li>Capture every tweet from the last 30 days, average likes + retweets into a baseline</li><li>Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)</li><li>Gate by tweet age: under 1 hour needs ≥ 3x; 1–6 hours needs ≥ 10x; 24 hours or more only passes at ≥ 50x (thresholds customizable in config)</li><li>These three tiers are the complete rule — anything outside them (including the 6–24h window) is not considered: reject and log</li><li>No-tweet candidates are not scored here — they go straight to Narrative analysis</li></ol>
   <div class="kv"><b>Inputs:</b> normalized candidate (Callout intake), tweet metrics (X API — external)</div>
   <div class="kv"><b>Outputs:</b> qualified candidate + multiplier → Narrative analysis</div>
   <div class="lbl">Needs from</div>
@@ -456,7 +455,7 @@ flowchart TD
     <table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr><tr><td class="who">Bobby</td><td class="who">Callout intake</td><td>tracked-source list (which traders/devs)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">Bobby</td><td class="who">Trade executor</td><td>Solana wallet + keys (secret reference)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">Bobby</td><td class="who">Narrative analysis</td><td>xAI API account (grok-4.6)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
-<tr><td class="who">Bobby</td><td class="who">Virality scorer</td><td>X API access + multiplier tier values + ruling for the 6–24h band</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="">no</td></tr>
+<tr><td class="who">Bobby</td><td class="who">Virality scorer</td><td>X API access + multiplier tier values (3x / 10x / 50x)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="">no</td></tr>
 <tr><td class="who">pump.fun / FOMO</td><td class="who">Callout intake</td><td>callout stream</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">X API</td><td class="who">Virality scorer</td><td>30-day tweet metrics</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">xAI API</td><td class="who">Narrative analysis</td><td>narrative + scores</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
@@ -490,8 +489,7 @@ flowchart TD
 
   <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">
-    <div class="item"><span>The 6–24 hour tweet-age band has no multiplier rule</span><span class="why">bands given are &lt;1h ≥3x, 1–6h ≥10x, ≥24h ≥50x. Material: coins in that window are on hold until Bobby sets the tier (same as 1–6h? flat ≥50x? reject?)</span></div>
-<div class="item"><span>Bundler data provider choice</span><span class="why">external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract</span></div>
+    <div class="item"><span>Bundler data provider choice</span><span class="why">external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract</span></div>
 <div class="item"><span>X API access</span><span class="why">owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision</span></div>
 <div class="item"><span>Chart data provider</span><span class="why">external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal &amp; trigger and Position manager</span></div>
 <div class="item"><span>Tweet metric source</span><span class="why">external choice: X API directly or a scraper (the earlier draft used ScrapingDog); pick one for the baseline engine</span></div>
