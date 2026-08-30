@@ -1,5 +1,14 @@
 [
   {
+    "file": "memecoin-virality-trader.html",
+    "title": "Memecoin virality trader",
+    "desc": "",
+    "date": "2026-08-30",
+    "emoji": "🪙",
+    "status": "open",
+    "issue": "#4"
+  },
+  {
     "file": "trading-bot.html",
     "title": "Trading bot",
     "desc": "A bot that places orders with automatic loss-capping and profit-locking, watched from a dashboard.",
