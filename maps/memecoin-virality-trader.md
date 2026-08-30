@@ -36,7 +36,7 @@ flowchart TD
   P -- "✅ Sell into volume" --> Q["✂️ Clip 15–20% of remaining 80%"]
   Q --> S{"Position flat<br>(moon bag aside)?"}
   S -- "❌" --> O
-  S -- "✅" --> T["🧾 Log result — trade complete"]
+  S -- "✅" --> FIN["🧾 Log result — trade complete"]
   D -.->|"⚠️ 6–24h band undefined — see Unresolved"| E
 ```
 
