@@ -15,6 +15,7 @@ A bot that places orders with automatic loss-capping and profit-locking, watched
 
 ### Broker connection
 Readiness: now
+Icon: 🏦
 Everything talks to the exchange through this team.
 Owns: API keys, API integration
 Needs from: nothing
@@ -25,6 +26,7 @@ Steps:
 
 ### Order engine
 Readiness: after-contract
+Icon: ⚙️
 The only department allowed to create, change, or cancel orders. Placement, stop-loss, and TP stay together because they share the order lifecycle.
 Owns: Order placement, Stop-loss, Dynamic TP
 Needs from: Broker connection
@@ -36,6 +38,7 @@ Steps:
 
 ### Position tracker
 Readiness: after-contract
+Icon: 📡
 Single source of truth for what is open right now.
 Owns: Tracking open positions
 Needs from: Broker connection
@@ -47,6 +50,7 @@ Steps:
 
 ### Front-end UI
 Readiness: waiting
+Icon: 🖥️
 The dashboard; read-only views plus buttons that call the order engine.
 Owns: Front end
 Needs from: Order engine, Position tracker
@@ -112,17 +116,17 @@ Modules: 4 candidates → 2 genuine (API client, order state machine)
 ## Diagram
 ```mermaid
 flowchart TD
-  subgraph BROKER["1 · Broker connection"]
-    B1["API keys"] --> B2["API client: auth, retries, rate limits"]
+  subgraph BROKER["🏦 1 · Broker connection"]
+    B1["🔑 API keys"] --> B2["🔌 API client: auth, retries, rate limits"]
   end
-  subgraph ENGINE["2 · Order engine"]
-    E1["Place / cancel orders"] --> E2["Stop-loss"] --> E3["Dynamic TP"]
+  subgraph ENGINE["⚙️ 2 · Order engine"]
+    E1["📤 Place / cancel orders"] --> E2["🛑 Stop-loss"] --> E3["🎯 Dynamic TP"]
   end
-  subgraph TRACK["3 · Position tracker"]
-    T1["Listen for fills"] --> T2["Live open-positions table"]
+  subgraph TRACK["📡 3 · Position tracker"]
+    T1["👂 Listen for fills"] --> T2["📊 Live open-positions table"]
   end
-  subgraph UI["4 · Front-end UI"]
-    U1["Positions view"] --> U2["Order form + close button"]
+  subgraph UI["🖥️ 4 · Front-end UI"]
+    U1["👀 Positions view"] --> U2["🧾 Order form + close button"]
   end
   B2 ==> E1
   B2 ==> T1

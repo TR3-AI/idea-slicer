@@ -16,7 +16,6 @@
     --shadow: 0 10px 30px rgba(70, 50, 120, .12);
     --purple: #6b4fd0;
     --lav: #efe9ff;
-    /* readiness bucket colors (pastel-safe on white) */
     --b-now: #2ea88a;
     --b-contract: #4a78d6;
     --b-joint: #a55ee0;
@@ -67,7 +66,7 @@
   .bucket-head.b-blocked { background: var(--b-blocked); }
 
   /* ── department cards ──────────────────────────────── */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
   .dept {
     background: var(--card); border-radius: 22px; padding: 20px 20px;
     box-shadow: var(--shadow); border-top: 4px solid var(--purple);
@@ -76,8 +75,9 @@
   .dept:nth-child(5n+3) { border-top-color: var(--b-waiting); }
   .dept:nth-child(5n+4) { border-top-color: var(--b-joint); }
   .dept:nth-child(5n+5) { border-top-color: var(--b-blocked); }
-  .dept h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-  .dept .why { color: var(--soft); font-size: 13.5px; margin-bottom: 12px; }
+  .dept h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .dept h3 .dicon { font-size: 26px; line-height: 1; }
+  .dept .why { color: var(--soft); font-size: 13.5px; margin-bottom: 6px; }
   .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--faint); margin: 12px 0 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
@@ -90,6 +90,20 @@
   ol.steps li { margin: 4px 0; }
   ol.steps li::marker { color: var(--purple); font-weight: 800; }
 
+  /* ── structure block (visual tree, inside dept cards) ── */
+  .sblock { background: var(--well); border-radius: 14px; padding: 12px 14px; }
+  .sline { display: flex; align-items: baseline; gap: 7px; font-size: 13.5px; margin: 4px 0; }
+  .sline .sic { flex: 0 0 auto; font-size: 14px; }
+  .sline.sec { font-weight: 800; }
+  .sline.mod .sname {
+    background: var(--lav); border: 1.5px solid #d9ccf7; border-radius: 8px;
+    padding: 2px 9px; font-weight: 700; color: var(--purple);
+  }
+  .sline.feat { color: var(--soft); }
+  .sline.d1 { margin-left: 0; }
+  .sline.d2 { margin-left: 26px; }
+  .sline.d3 { margin-left: 52px; }
+
   .report { color: var(--soft); font-size: 13px; text-align: center; margin-top: 16px; }
 
   /* ── diagram ───────────────────────────────────────── */
@@ -98,14 +112,6 @@
     box-shadow: var(--shadow); overflow-x: auto;
   }
   .mermaid { display: flex; justify-content: center; min-width: 320px; }
-
-  /* ── structure tree ────────────────────────────────── */
-  .tree {
-    background: var(--card); border-radius: 22px; padding: 20px;
-    box-shadow: var(--shadow); overflow-x: auto;
-    font: 13.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: var(--ink); white-space: pre;
-  }
 
   /* ── unresolved ────────────────────────────────────── */
   .unresolved .item {
@@ -135,31 +141,28 @@
     <div class="stamp">idea-slicer · updated {{UPDATED}} · status: {{STATUS}}</div>
   </header>
 
-  <h2>This idea needs — in order</h2>
+  <h2>🧭 This idea needs — in order</h2>
   <div class="needs">
     {{NEEDS}}
   </div>
 
-  <h2>Departments — by parallel readiness</h2>
+  <h2>🗂️ Departments — by parallel readiness</h2>
   {{DEPT_GROUPS}}
   <div class="report">{{REPORT}}</div>
 
-  <h2>Flow — who hands what to whom</h2>
+  <h2>🔀 Flow — who hands what to whom</h2>
   <div class="diagram">
     <pre class="mermaid">
 {{MERMAID}}
     </pre>
   </div>
 
-  <h2>Structure — the full tree</h2>
-  <pre class="tree">{{TREE}}</pre>
-
-  <h2>Unresolved — could reshape the map</h2>
+  <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">
     {{UNRESOLVED}}
   </div>
 
-  <h2>Unsorted — parked, not lost</h2>
+  <h2>📥 Unsorted — parked, not lost</h2>
   <div class="unsorted">
     {{UNSORTED}}
   </div>

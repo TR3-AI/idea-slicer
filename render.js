@@ -60,20 +60,27 @@ function parse(issue) {
   const summary =
     body.split(/^## /m)[0].split("\n").map((l) => l.trim())
       .filter((l) => l && !l.startsWith("#") && !/^\w[\w ]*:/.test(l))[0] || "";
-  const stop = /^(Owns|Needs from|Steps|Readiness):|^\d+\./;
+  const stop = /^(Owns|Needs from|Steps|Readiness|Icon):|^\d+\./;
   const KEYS = ["now", "after-contract", "joint-design", "waiting", "blocked"];
   const depts = section("Departments").split(/^### /m).slice(1).map((chunk) => {
     const r = meta2(chunk, /^Readiness:\s*([a-z-]+)/m);
     return {
       name: chunk.split("\n")[0].trim(),
       readiness: KEYS.includes(r) ? r : "now",
+      icon: meta2(chunk, /^Icon:\s*(\S+)/m) || "📦",
       why: (chunk.split("\n").slice(1).find((l) => l.trim() && !stop.test(l)) || "").trim(),
       owns: list(meta2(chunk, /^Owns:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
       needsFrom: list(meta2(chunk, /^Needs from:\s*(.+)$/m)).filter((s) => s.toLowerCase() !== "nothing"),
       steps: [...chunk.matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
+      structure: [],
     };
   });
   const tree = section("Structure tree").replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
+  const treeRoot = parseTree(tree);
+  for (const d of depts) {
+    const tn = treeRoot.children.find((c) => c.name.toLowerCase() === d.name.toLowerCase());
+    if (tn) d.structure = tn.children;
+  }
   const report = section("Consolidation report").split("\n").map((l) => l.trim()).filter(Boolean).join(" · ");
   return {
     title: meta2(body, /^# (.+)$/m) || issue.title,
@@ -83,12 +90,34 @@ function parse(issue) {
     summary,
     needs: [...section("This idea needs").matchAll(/^\d+\.\s+(.+)$/gm)].map((x) => x[1].trim()),
     depts,
-    tree,
     report,
     unresolved: [...section("Unresolved").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     unsorted: [...section("Unsorted").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     mermaid: meta2(body, /```mermaid\n([\s\S]*?)```/),
   };
+}
+
+// ── 2b. parse ASCII tree-art into nested nodes ──
+function parseTree(text) {
+  const lines = text.split("\n").filter((l) => l.trim());
+  const root = { name: (lines[0] || "PROJECT").trim(), children: [] };
+  const stack = [root];
+  for (const raw of lines.slice(1)) {
+    const bi = raw.search(/[├└]──/);
+    if (bi === -1) continue;
+    const depth = Math.floor(bi / 4) + 1;
+    const label = raw.slice(bi).replace(/^[├└]──\s?/, "").trim();
+    const m = label.match(/^(.*?)\s*\((module|section|feature)\)\s*$/i);
+    const node = {
+      name: m ? m[1].trim() : label,
+      type: m ? m[2].toLowerCase() : depth === 2 ? "section" : "feature",
+      children: [],
+    };
+    (stack[depth - 1] || root).children.push(node);
+    stack[depth] = node;
+    stack.length = depth + 1;
+  }
+  return root;
 }
 
 // ── 3. render one page from template.html ──
@@ -97,23 +126,30 @@ function renderHtml(p, issue) {
   const needs = p.needs
     .map((n, i) => `<span class="pill"><b>${i + 1}</b>${esc(n)}</span>`)
     .join(`<span class="arr">→</span>`);
+  const ICONS = { section: "📁", module: "🧩", feature: "🔹" };
+  const structHtml = (nodes, lvl) => nodes.map((n) => {
+    const cls = n.type === "module" ? "mod" : n.type === "section" ? "sec" : "feat";
+    const kids = n.children.length ? structHtml(n.children, lvl + 1) : "";
+    return `<div class="sline ${cls} d${Math.min(lvl, 3)}"><span class="sic">${ICONS[n.type] || "🔹"}</span><span class="sname">${esc(n.name)}</span></div>${kids}`;
+  }).join("");
   const cardHtml = (d) => `
 <div class="dept">
-  <h3>${esc(d.name)}</h3>
+  <h3><span class="dicon">${esc(d.icon)}</span>${esc(d.name)}</h3>
   ${d.why ? `<div class="why">${esc(d.why)}</div>` : ""}
   <div class="lbl">Owns</div>
   <div class="chips">${d.owns.length ? d.owns.map((o) => `<span class="chip">${esc(o)}</span>`).join("") : '<span class="chip none">—</span>'}</div>
+  ${d.structure.length ? `<div class="lbl">Structure</div><div class="sblock">${structHtml(d.structure, 1)}</div>` : ""}
   <div class="lbl">Steps</div>
   <ol class="steps">${d.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
   <div class="lbl">Needs from</div>
   <div class="chips">${d.needsFrom.length ? d.needsFrom.map((x) => `<span class="chip dep">${esc(x)}</span>`).join("") : '<span class="chip none">nothing — starts day one</span>'}</div>
 </div>`;
   const BUCKETS = [
-    ["now", "Can start in parallel now"],
-    ["after-contract", "Can start in parallel after contract definition"],
-    ["joint-design", "Must perform joint design first"],
-    ["waiting", "Must wait for another department"],
-    ["blocked", "Blocked by external or owner dependency"],
+    ["now", "▶️ Can start in parallel now"],
+    ["after-contract", "📝 Can start in parallel after contract definition"],
+    ["joint-design", "🤝 Must perform joint design first"],
+    ["waiting", "⏳ Must wait for another department"],
+    ["blocked", "🚧 Blocked by external or owner dependency"],
   ];
   const groups = BUCKETS.map(([key, label]) => {
     const ds = p.depts.filter((d) => d.readiness === key);
@@ -139,7 +175,6 @@ function renderHtml(p, issue) {
     .replace("{{DEPT_GROUPS}}", groups || "<p>No departments yet.</p>")
     .replace("{{REPORT}}", esc(p.report) || "")
     .replace("{{MERMAID}}", p.mermaid || "flowchart TD\n  A[No diagram yet]")
-    .replace("{{TREE}}", esc(p.tree) || "Tree not generated yet — re-slice with /idea-slicer")
     .replace("{{UNRESOLVED}}", unresolvedHtml)
     .replace("{{UNSORTED}}", unsortedHtml);
 }
