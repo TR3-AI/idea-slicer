@@ -16,7 +16,6 @@
     --shadow: 0 10px 30px rgba(70, 50, 120, .12);
     --purple: #6b4fd0;
     --lav: #efe9ff;
-    /* readiness bucket colors (pastel-safe on white) */
     --b-now: #2ea88a;
     --b-contract: #4a78d6;
     --b-joint: #a55ee0;
@@ -67,7 +66,7 @@
   .bucket-head.b-blocked { background: var(--b-blocked); }
 
   /* ── department cards ──────────────────────────────── */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
   .dept {
     background: var(--card); border-radius: 22px; padding: 20px 20px;
     box-shadow: var(--shadow); border-top: 4px solid var(--purple);
@@ -76,8 +75,9 @@
   .dept:nth-child(5n+3) { border-top-color: var(--b-waiting); }
   .dept:nth-child(5n+4) { border-top-color: var(--b-joint); }
   .dept:nth-child(5n+5) { border-top-color: var(--b-blocked); }
-  .dept h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
-  .dept .why { color: var(--soft); font-size: 13.5px; margin-bottom: 12px; }
+  .dept h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .dept h3 .dicon { font-size: 26px; line-height: 1; }
+  .dept .why { color: var(--soft); font-size: 13.5px; margin-bottom: 6px; }
   .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--faint); margin: 12px 0 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
@@ -90,6 +90,20 @@
   ol.steps li { margin: 4px 0; }
   ol.steps li::marker { color: var(--purple); font-weight: 800; }
 
+  /* ── structure block (visual tree, inside dept cards) ── */
+  .sblock { background: var(--well); border-radius: 14px; padding: 12px 14px; }
+  .sline { display: flex; align-items: baseline; gap: 7px; font-size: 13.5px; margin: 4px 0; }
+  .sline .sic { flex: 0 0 auto; font-size: 14px; }
+  .sline.sec { font-weight: 800; }
+  .sline.mod .sname {
+    background: var(--lav); border: 1.5px solid #d9ccf7; border-radius: 8px;
+    padding: 2px 9px; font-weight: 700; color: var(--purple);
+  }
+  .sline.feat { color: var(--soft); }
+  .sline.d1 { margin-left: 0; }
+  .sline.d2 { margin-left: 26px; }
+  .sline.d3 { margin-left: 52px; }
+
   .report { color: var(--soft); font-size: 13px; text-align: center; margin-top: 16px; }
 
   /* ── diagram ───────────────────────────────────────── */
@@ -98,14 +112,6 @@
     box-shadow: var(--shadow); overflow-x: auto;
   }
   .mermaid { display: flex; justify-content: center; min-width: 320px; }
-
-  /* ── structure tree ────────────────────────────────── */
-  .tree {
-    background: var(--card); border-radius: 22px; padding: 20px;
-    box-shadow: var(--shadow); overflow-x: auto;
-    font: 13.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: var(--ink); white-space: pre;
-  }
 
   /* ── unresolved ────────────────────────────────────── */
   .unresolved .item {
@@ -135,29 +141,31 @@
     <div class="stamp">idea-slicer · updated 2026-08-29 · status: open · issue #1</div>
   </header>
 
-  <h2>This idea needs — in order</h2>
+  <h2>🧭 This idea needs — in order</h2>
   <div class="needs">
     <span class="pill"><b>1</b>Broker connection (API keys + integration)</span><span class="arr">→</span><span class="pill"><b>2</b>Order engine (placement, stop-loss, TP)</span><span class="arr">→</span><span class="pill"><b>3</b>Position tracker</span><span class="arr">→</span><span class="pill"><b>4</b>Front-end UI</span>
   </div>
 
-  <h2>Departments — by parallel readiness</h2>
-  <div class="bucket"><div class="bucket-head b-now">Can start in parallel now</div><div class="grid">
+  <h2>🗂️ Departments — by parallel readiness</h2>
+  <div class="bucket"><div class="bucket-head b-now">▶️ Can start in parallel now</div><div class="grid">
 <div class="dept">
-  <h3>Broker connection</h3>
+  <h3><span class="dicon">🏦</span>Broker connection</h3>
   <div class="why">Everything talks to the exchange through this team.</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">API keys</span><span class="chip">API integration</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline mod d1"><span class="sic">🧩</span><span class="sname">API client</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">auth + API keys</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">rate limits + retries</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Get API keys for the exchange (keys = the password that lets code trade on your account)</li><li>Wrap the exchange API in one client module — one place for auth, rate limits, retries</li><li>Prove it: fetch account balance and live price</li></ol>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip none">nothing — starts day one</span></div>
 </div></div></div>
-<div class="bucket"><div class="bucket-head b-after-contract">Can start in parallel after contract definition</div><div class="grid">
+<div class="bucket"><div class="bucket-head b-after-contract">📝 Can start in parallel after contract definition</div><div class="grid">
 <div class="dept">
-  <h3>Order engine</h3>
+  <h3><span class="dicon">⚙️</span>Order engine</h3>
   <div class="why">The only department allowed to create, change, or cancel orders. Placement, stop-loss, and TP stay together because they share the order lifecycle.</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">Order placement</span><span class="chip">Stop-loss</span><span class="chip">Dynamic TP</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Placement</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">order state machine</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Protective exits</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">stop-loss</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">dynamic TP</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Broker connection: place/cancel calls, fill events</li><li>Place a basic market/limit order through the broker client</li><li>Attach a stop-loss (auto-sell if price drops to a level you set, capping the loss)</li><li>Attach a dynamic TP (take-profit: auto-sell to lock gains; &quot;dynamic&quot; = the level trails the price instead of sitting fixed)</li></ol>
   <div class="lbl">Needs from</div>
@@ -165,21 +173,23 @@
 </div>
 
 <div class="dept">
-  <h3>Position tracker</h3>
+  <h3><span class="dicon">📡</span>Position tracker</h3>
   <div class="why">Single source of truth for what is open right now.</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">Tracking open positions</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Live positions table</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">P&amp;L calculator</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Pin the contract with Broker connection: fill-event stream shape</li><li>Subscribe to fill events from the broker client</li><li>Keep a live table of open positions: size, entry, current P&amp;L</li><li>Reconcile with the exchange on startup and on a timer</li></ol>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Broker connection</span></div>
 </div></div></div>
-<div class="bucket"><div class="bucket-head b-waiting">Must wait for another department</div><div class="grid">
+<div class="bucket"><div class="bucket-head b-waiting">⏳ Must wait for another department</div><div class="grid">
 <div class="dept">
-  <h3>Front-end UI</h3>
+  <h3><span class="dicon">🖥️</span>Front-end UI</h3>
   <div class="why">The dashboard; read-only views plus buttons that call the order engine.</div>
   <div class="lbl">Owns</div>
   <div class="chips"><span class="chip">Front end</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Positions view</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Order form</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Show open positions live from the tracker</li><li>Order form with stop-loss + dynamic TP fields</li><li>Manual close button routed through the order engine</li></ol>
   <div class="lbl">Needs from</div>
@@ -187,21 +197,21 @@
 </div></div></div>
   <div class="report">Departments: 6 candidates → 4 final (stop-loss and TP teams merged into Order engine on shared-lifecycle grounds) · Modules: 4 candidates → 2 genuine (API client, order state machine)</div>
 
-  <h2>Flow — who hands what to whom</h2>
+  <h2>🔀 Flow — who hands what to whom</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
-  subgraph BROKER["1 · Broker connection"]
-    B1["API keys"] --> B2["API client: auth, retries, rate limits"]
+  subgraph BROKER["🏦 1 · Broker connection"]
+    B1["🔑 API keys"] --> B2["🔌 API client: auth, retries, rate limits"]
   end
-  subgraph ENGINE["2 · Order engine"]
-    E1["Place / cancel orders"] --> E2["Stop-loss"] --> E3["Dynamic TP"]
+  subgraph ENGINE["⚙️ 2 · Order engine"]
+    E1["📤 Place / cancel orders"] --> E2["🛑 Stop-loss"] --> E3["🎯 Dynamic TP"]
   end
-  subgraph TRACK["3 · Position tracker"]
-    T1["Listen for fills"] --> T2["Live open-positions table"]
+  subgraph TRACK["📡 3 · Position tracker"]
+    T1["👂 Listen for fills"] --> T2["📊 Live open-positions table"]
   end
-  subgraph UI["4 · Front-end UI"]
-    U1["Positions view"] --> U2["Order form + close button"]
+  subgraph UI["🖥️ 4 · Front-end UI"]
+    U1["👀 Positions view"] --> U2["🧾 Order form + close button"]
   end
   B2 ==> E1
   B2 ==> T1
@@ -210,33 +220,14 @@ flowchart TD
     </pre>
   </div>
 
-  <h2>Structure — the full tree</h2>
-  <pre class="tree">TRADING BOT
-├── BROKER CONNECTION
-│   └── API client (module)
-│       ├── auth + API keys
-│       └── rate limits + retries
-├── ORDER ENGINE
-│   ├── Placement (section)
-│   │   └── order state machine (module)
-│   └── Protective exits (section)
-│       ├── stop-loss (feature)
-│       └── dynamic TP (feature)
-├── POSITION TRACKER
-│   └── Live positions table (section)
-│       └── P&amp;L calculator (feature)
-└── FRONT-END UI
-    ├── Positions view (section)
-    └── Order form (section)</pre>
-
-  <h2>Unresolved — could reshape the map</h2>
+  <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">
     <div class="item"><span>Backtesting</span><span class="why">could change department boundaries: its own Strategy department, or a mode of the order engine</span></div>
 <div class="item"><span>Alert channel</span><span class="why">external dependency choice: Telegram, email, or push; affects who owns alerts</span></div>
 <div class="item"><span>Max position size value</span><span class="why">owner-supplied input: the 2% figure needs Bobby's confirmation before it becomes a rule</span></div>
   </div>
 
-  <h2>Unsorted — parked, not lost</h2>
+  <h2>📥 Unsorted — parked, not lost</h2>
   <div class="unsorted">
     <div class="item"><span>alerts</span><span class="why">ping me when a trade opens or closes (Telegram?) [#3] — arrived via GitHub, not yet sliced — run /idea-slicer to place it</span></div>
 <div class="item"><span>max position size</span><span class="why">never risk more than 2% of the account on a single trade [#2] — arrived via GitHub, not yet sliced — run /idea-slicer to place it</span></div>
