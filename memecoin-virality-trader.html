@@ -187,29 +187,29 @@
 
   <header>
     <h1>Memecoin virality trader</h1>
-    <div class="sub">Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a viral tweet, a high Grok score, clean bundlers, and a chart breakout with divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.</div>
+    <div class="sub">Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a chart breakout with divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.</div>
     <div class="reco">8 departments, 10 sections, 7 genuine modules</div>
     <div class="stamp">idea-slicer · updated 2026-08-30 · status: open · issue #4 · greenfield</div>
   </header>
 
   <h2>🧭 This idea needs — in order</h2>
   <div class="needs">
-    <span class="pill"><b>1</b>Callout intake (pump.fun / FOMO sources)</span><span class="arr">→</span><span class="pill"><b>2</b>Virality scorer (30-day baseline + multiplier gate)</span><span class="arr">→</span><span class="pill"><b>3</b>Narrative analysis (Grok 4.6, combined score &gt; 8)</span><span class="arr">→</span><span class="pill"><b>4</b>Bundler checker (strict ≤10–15% rule)</span><span class="arr">→</span><span class="pill"><b>5</b>Signal &amp; trigger (pattern + divergence + 30% stop)</span><span class="arr">→</span><span class="pill"><b>6</b>Trade executor (Solana, sell-into-volume)</span><span class="arr">→</span><span class="pill"><b>7</b>Position manager (2x rule, moon bag, clip ladder)</span><span class="arr">→</span><span class="pill"><b>8</b>Trade journal (every gate + fill logged)</span>
+    <span class="pill"><b>1</b>Callout intake (pump.fun / FOMO sources)</span><span class="arr">→</span><span class="pill"><b>2</b>Virality scorer (30-day baseline + age-tiered multiplier gates)</span><span class="arr">→</span><span class="pill"><b>3</b>Narrative analysis (Grok 4.6, combined score &gt; 8)</span><span class="arr">→</span><span class="pill"><b>4</b>Bundler checker (strict ≤10–15% rule)</span><span class="arr">→</span><span class="pill"><b>5</b>Signal &amp; trigger (pattern + divergence + 30% stop)</span><span class="arr">→</span><span class="pill"><b>6</b>Trade executor (Solana, sell-into-volume)</span><span class="arr">→</span><span class="pill"><b>7</b>Position manager (2x rule, moon bag, clip ladder)</span><span class="arr">→</span><span class="pill"><b>8</b>Trade journal (every gate + fill logged)</span>
   </div>
 
   <h2>🎬 Operating flow — how the finished system runs</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
-  A["📣 Callout arrives — tracked trader/dev calls a coin<br>on pump.fun or FOMO (web + mobile)"] --> B{"⏱️ Tweet posted within<br>1 hour of coin creation?"}
-  B -- "❌ Older" --> R1["🚫 Reject — log reason"]
-  B -- "✅ Within 1h" --> C["📊 Build 30-day baseline:<br>capture every tweet, average likes + retweets"]
-  C --> D{"✖️ Multiplier — this tweet vs baseline<br>≥ 3x? (threshold customizable)"}
-  D -- "❌ Below" --> R2["🚫 Reject — log reason"]
-  D -- "✅ ≥ 3x — potential runner" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, veracity score,<br>attention score via X search"]
-  E --> F{"🧮 Combined score<br>> 8?"}
-  F -- "❌ ≤ 8" --> R3["🚫 Reject — log reason"]
-  F -- "✅ > 8" --> G["🧬 Bundler check:<br>% share of supply + trend (down / flat / up)"]
+  A["📣 Callout arrives — tracked trader/dev calls a coin<br>on pump.fun or FOMO (web + mobile)"] --> T{"🐦 Tweet attached<br>to the coin?"}
+  T -- "❌ No tweet" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, virality score,<br>attention score via X search"]
+  T -- "✅ Yes" --> C["📊 Build 30-day baseline:<br>capture every tweet, average likes + retweets"]
+  C --> D{"⏱️✖️ Tweet age × multiplier<br>in its band?"}
+  D -- "❌ Fails its band" --> R1["🚫 Reject — log reason"]
+  D -- "✅ <1h ≥ 3x · 1–6h ≥ 10x · ≥24h ≥ 50x" --> E
+  E --> F{"🧮 Combined score —<br>with tweet ≥ 6 · no tweet > 8?"}
+  F -- "❌ Below" --> R3["🚫 Reject — log reason"]
+  F -- "✅ Pass" --> G["🧬 Bundler check:<br>% share of supply + trend (down / flat / up)"]
   G --> H{"🚫 Bundlers<br>> 10–15%?"}
   H -- "❌ Too many" --> R4["🚫 Reject — log reason"]
   H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>pennant or descending triangle forming"]
@@ -228,7 +228,7 @@ flowchart TD
   Q --> S{"Position flat<br>(moon bag aside)?"}
   S -- "❌" --> O
   S -- "✅" --> T["🧾 Log result — trade complete"]
-  D -.->|"⚠️ >50x rule: action cut off in spec — see Unresolved"| E
+  D -.->|"⚠️ 6–24h band undefined — see Unresolved"| E
     </pre>
   </div>
 
@@ -255,15 +255,15 @@ flowchart TD
 <div class="dept">
   <h3><span class="dicon">📊</span>Virality scorer</h3>
   <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
-  <div class="why">Decide whether the callout's tweet is abnormally hot versus its own history — the tweet/coin qualification gate.</div>
-  <div class="kv"><b>Starts when:</b> a normalized candidate arrives</div>
-  <div class="kv"><b>Completes when:</b> candidates are passed (viable + ≥3x) or rejected with a logged reason</div>
-  <div class="kv boundary"><b>Boundary:</b> owns the 30-day baseline and multiplier math; does not own narrative judgment or chart work</div>
+  <div class="why">Decide whether the callout's tweet is hot enough *for its age* versus its own history — the tweet/coin qualification gate.</div>
+  <div class="kv"><b>Starts when:</b> a normalized candidate with a tweet attached arrives (no-tweet candidates skip straight to Narrative analysis)</div>
+  <div class="kv"><b>Completes when:</b> candidates are passed (multiplier meets its age band) or rejected with a logged reason</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the 30-day baseline, the multiplier math, and the age-band tiers; does not own narrative judgment or chart work</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">30-day baseline</span><span class="chip">virality multiplier</span><span class="chip">customizable threshold</span><span class="chip">1-hour viability window</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Baseline engine</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">30-day baseline calculator</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">1-hour viability check</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">multiplier threshold (configuration value)</span></div></div>
+  <div class="chips"><span class="chip">30-day baseline</span><span class="chip">virality multiplier</span><span class="chip">age-band tiers (&lt;1h ≥ 3x · 1–6h ≥ 10x · ≥24h ≥ 50x)</span><span class="chip">customizable thresholds</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Baseline engine</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">30-day baseline calculator</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">age × multiplier band check</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">multiplier tiers (configuration value)</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Gate 1 — tweet age: reject if the tweet is older than 1 hour after coin creation</li><li>Capture every tweet from the last 30 days, average likes + retweets into a baseline</li><li>Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)</li><li>Gate 2 — multiplier ≥ threshold (3x to start; customizable in config)</li><li>Implement the &gt;50x rule once Bobby completes it (see Unresolved)</li></ol>
+  <ol class="steps"><li>Capture every tweet from the last 30 days, average likes + retweets into a baseline</li><li>Compare the coin's tweet against the baseline → multiplier (1x, 2x, 3x…)</li><li>Gate by tweet age: under 1 hour needs ≥ 3x; 1–6 hours needs ≥ 10x; 24 hours or more only passes at ≥ 50x (thresholds customizable in config)</li><li>The 6–24 hour band is undefined — hold coins there until Bobby rules on it (see Unresolved)</li><li>No-tweet candidates are not scored here — they go straight to Narrative analysis</li></ol>
   <div class="kv"><b>Inputs:</b> normalized candidate (Callout intake), tweet metrics (X API — external)</div>
   <div class="kv"><b>Outputs:</b> qualified candidate + multiplier → Narrative analysis</div>
   <div class="lbl">Needs from</div>
@@ -274,15 +274,15 @@ flowchart TD
   <h3><span class="dicon">🧠</span>Narrative analysis</h3>
   <div class="chips"><span class="chip state">✅ ready with mocks</span></div>
   <div class="why">Judge what the coin *is* and whether the attention is real — the AI scoring gate.</div>
-  <div class="kv"><b>Starts when:</b> a ≥3x candidate arrives</div>
-  <div class="kv"><b>Completes when:</b> a combined score (&gt;8 pass / ≤8 reject) is attached with narrative + thesis</div>
-  <div class="kv boundary"><b>Boundary:</b> owns the Grok prompt, the five extracted scores, and the combine rule; does not own raw tweet collection</div>
+  <div class="kv"><b>Starts when:</b> a qualified candidate arrives (tweet band passed, or no tweet at all)</div>
+  <div class="kv"><b>Completes when:</b> a combined score is attached — pass at ≥ 6 with a tweet, &gt; 8 without — or the coin is rejected with a logged reason</div>
+  <div class="kv boundary"><b>Boundary:</b> owns the Grok prompt, the five extracted scores, and the dual threshold; does not own raw tweet collection</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">pre-generated prompt</span><span class="chip">narrative</span><span class="chip">thesis</span><span class="chip">sentiment</span><span class="chip">veracity score</span><span class="chip">attention score</span><span class="chip">combined score</span><span class="chip">&gt;8 gate</span></div>
+  <div class="chips"><span class="chip">pre-generated prompt</span><span class="chip">narrative</span><span class="chip">thesis</span><span class="chip">sentiment</span><span class="chip">virality score</span><span class="chip">attention score</span><span class="chip">combined score</span><span class="chip">dual gate (≥ 6 with tweet · &gt; 8 without)</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Grok scoring</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">Grok adapter</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">score combiner</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt</li><li>Extract: narrative, thesis, sentiment, veracity score (tweet vs baseline), attention score (X search across Twitter)</li><li>Combine into one score</li><li>Gate 3 — combined score &gt; 8 → pass; otherwise reject and log</li></ol>
-  <div class="kv"><b>Inputs:</b> qualified candidate (Virality scorer), Grok 4.6 API (external, owner account)</div>
+  <ol class="steps"><li>Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt</li><li>Extract: narrative, thesis, sentiment, virality score (tweet vs baseline), attention score (X search across Twitter)</li><li>Combine into one score</li><li>Gate 3 — dual threshold: with a tweet the combined score must be ≥ 6; without a tweet it must be &gt; 8 (a tweet's virality earns the coin slack on the score)</li></ol>
+  <div class="kv"><b>Inputs:</b> qualified candidate (Virality scorer) or no-tweet candidate (Callout intake), Grok 4.6 API (external, owner account)</div>
   <div class="kv"><b>Outputs:</b> scored candidate → Bundler checker</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Virality scorer</span></div>
@@ -392,10 +392,10 @@ flowchart TD
     I1["👂 Listen: pump.fun / FOMO"] --> I2["🧾 Normalize candidate"]
   end
   subgraph SCORE["📊 2 · Virality scorer"]
-    V1["⏱️ 1h viability"] --> V2["📉 30-day baseline"] --> V3["✖️ Multiplier ≥ 3x"]
+    V1["⏱️✖️ Age × multiplier bands"] --> V2["📉 30-day baseline"] --> V3["✖️ 3x / 10x / 50x tiers"]
   end
   subgraph GROK["🧠 3 · Narrative analysis"]
-    G1["🧠 Grok 4.6 prompt"] --> G2["🧮 Combined score > 8"]
+    G1["🧠 Grok 4.6 prompt"] --> G2["🧮 Gate: tweet ≥ 6 · none > 8"]
   end
   subgraph BUND["🧬 4 · Bundler checker"]
     B1["🔍 % share + trend"] --> B2["🚫 ≤ 10–15% rule"]
@@ -413,6 +413,7 @@ flowchart TD
     L1["✍️ Log everything"]
   end
   I2 ==> V1
+  I2 -.->|"no tweet attached"| G1
   V3 ==> G1
   G2 ==> B1
   B2 ==> T1
@@ -455,7 +456,7 @@ flowchart TD
     <table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr><tr><td class="who">Bobby</td><td class="who">Callout intake</td><td>tracked-source list (which traders/devs)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">Bobby</td><td class="who">Trade executor</td><td>Solana wallet + keys (secret reference)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">Bobby</td><td class="who">Narrative analysis</td><td>xAI API account (grok-4.6)</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
-<tr><td class="who">Bobby</td><td class="who">Virality scorer</td><td>X API access + multiplier threshold + &gt;50x rule decision</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="">no</td></tr>
+<tr><td class="who">Bobby</td><td class="who">Virality scorer</td><td>X API access + multiplier tier values + ruling for the 6–24h band</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="">no</td></tr>
 <tr><td class="who">pump.fun / FOMO</td><td class="who">Callout intake</td><td>callout stream</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">X API</td><td class="who">Virality scorer</td><td>30-day tweet metrics</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">xAI API</td><td class="who">Narrative analysis</td><td>narrative + scores</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
@@ -489,7 +490,7 @@ flowchart TD
 
   <h2>🚨 Unresolved — could reshape the map</h2>
   <div class="unresolved">
-    <div class="item"><span>The &gt;50x multiplier rule is cut off in the spec (&quot;whether the coin is traded 24 hours later makes no difference, we still…&quot;)</span><span class="why">material: could add an auto-qualify bypass around the Grok gate; Bobby to complete the rule</span></div>
+    <div class="item"><span>The 6–24 hour tweet-age band has no multiplier rule</span><span class="why">bands given are &lt;1h ≥3x, 1–6h ≥10x, ≥24h ≥50x. Material: coins in that window are on hold until Bobby sets the tier (same as 1–6h? flat ≥50x? reject?)</span></div>
 <div class="item"><span>Bundler data provider choice</span><span class="why">external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract</span></div>
 <div class="item"><span>X API access</span><span class="why">owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision</span></div>
 <div class="item"><span>Chart data provider</span><span class="why">external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal &amp; trigger and Position manager</span></div>
@@ -500,7 +501,6 @@ flowchart TD
   <h2>📥 Unsorted — parked, not lost</h2>
   <div class="unsorted">
     <div class="item"><span>Fractional Kelly sizing</span><span class="why">from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says</span></div>
-<div class="item"><span>6.5/8 dual threshold (with/without tweet)</span><span class="why">from the earlier draft; the new flow uses a single &gt;8 gate plus a separate 3x multiplier gate; parked in case the dual rule was intentional</span></div>
   </div>
 
   <footer>Living map — regenerated on every new thought. Source of truth: the GitHub issue behind this page.</footer>
