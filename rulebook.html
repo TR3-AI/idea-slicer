@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Idea-slicer rulebook</title>
+<style>
+  :root {
+    --ink: #2b2140;
+    --soft: #6b6580;
+    --faint: #b0a9c2;
+    --card: #ffffff;
+    --well: #f7f5fd;
+    --line: #e7e0f5;
+    --shadow: 0 10px 30px rgba(70, 50, 120, .12);
+    --purple: #6b4fd0;
+    --lav: #efe9ff;
+    --b-now: #2ea88a;
+    --amber: #c9930a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    margin: 0; padding: 24px 16px 64px;
+    font-family: ui-rounded, "Segoe UI", Nunito, system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, #fff4e6 0%, #ffe9f3 45%, #e9f0ff 100%);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 26px; }
+  h1 { font-size: 32px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
+  .sub { color: var(--soft); margin-top: 6px; font-size: 16px; }
+  .stamp { color: var(--faint); font-size: 12.5px; margin-top: 6px; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--soft); margin: 32px 0 12px; text-align: center;
+  }
+  .item {
+    background: var(--card); border-radius: 16px; padding: 14px 18px; margin: 8px 0;
+    box-shadow: var(--shadow); border-left: 5px solid var(--purple);
+    font-size: 14.5px; line-height: 1.5;
+  }
+  .item b { color: var(--purple); }
+  .item.fact { border-left-color: var(--b-now); }
+  .item.fact b { color: var(--b-now); }
+  .item .a { display: block; color: var(--soft); font-size: 13.5px; margin-top: 4px; }
+  .back { display: block; text-align: center; margin-top: 28px; color: var(--purple); font-weight: 700; text-decoration: none; }
+  footer { text-align: center; color: var(--soft); font-size: 13px; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>📖 Idea-slicer rulebook</h1>
+    <div class="sub">Scrambled thoughts → parallel departments. The rules, the verified facts, and the FAQs.</div>
+    <div class="stamp">updated 2026-08-31</div>
+  </header>
+
+  <h2>The rules — how an idea gets sliced</h2>
+  <div class="item"><b>Understand first.</b> The whole idea is read end to end before anything is sliced. No slicing sentence-by-sentence.</div>
+  <div class="item"><b>Operating flow first.</b> Every map starts with how the finished system runs, trigger to outcome — structure follows the flow, never the other way.</div>
+  <div class="item"><b>Departments, not tasks.</b> A department owns a responsibility and runs in parallel. Shared state merges departments; a hard contract boundary splits them.</div>
+  <div class="item"><b>Genuine modules only.</b> A module is a real building block (external adapter, stateful engine, non-trivial algorithm). One calculation or one config value is a feature, not a module.</div>
+  <div class="item"><b>Mobile is the primary screen.</b> Bobby reads these pages on his phone. No visual change is done until verified at phone width (~390px) as well as desktop.</div>
+  <div class="item"><b>Terse chat, rich page.</b> Chat replies carry only what changed; the page carries the full structure. ELI5 clarity, zero dumbing-down — technical terms stay, glossed in plain words.</div>
+  <div class="item"><b>Owner dependencies are explicit.</b> Anything only Bobby can supply (keys, accounts, decisions) is listed as a blocking dependency, referenced by secret name — never stored raw.</div>
+
+  <h2>Facts — verified truths, trust these over guesses</h2>
+  <div class="item fact"><b>1.</b> An idea is a GitHub issue labeled <b>idea</b>; each added thought is a <b>thought</b>-labeled issue, auto-nested as a sub-issue of the idea by the robot.</div>
+  <div class="item fact"><b>2.</b> The robot commits straight to <b>main</b>. Before every commit: stash, pull --rebase, pop — never push over the robot's head.</div>
+  <div class="item fact"><b>3.</b> The robot auto-parks every new thought issue into the map's Unsorted lane. When that thought gets sliced, its park line is deleted.</div>
+  <div class="item fact"><b>4.</b> A 422 "duplicate" when nesting a sub-issue means the robot already nested it — not an error.</div>
+  <div class="item fact"><b>5.</b> The live page updates ~60–75s after the render run goes green. A curl grep on the live URL is the proof — a green run alone is not.</div>
+  <div class="item fact"><b>6.</b> There are no unit tests. Verification = render run success + live-page grep for the feature string + a phone-width screenshot for any visual change.</div>
+  <div class="item fact"><b>7.</b> The map file <b>maps/&lt;slug&gt;.md</b> is the source of truth; the issue body is a mirror, re-synced after every publish.</div>
+  <div class="item fact"><b>8.</b> Chat history is expendable by design. Any agent resumes cold with: <b>/ideaslicer — resume the &lt;idea&gt; idea (TR3-AI/idea-slicer issue #&lt;n&gt;)</b>.</div>
+
+  <h2>FAQs</h2>
+  <div class="item"><b>How do I add to an idea?</b><span class="a">Just talk. Each message becomes a thought issue and gets sliced into the map — no special format needed.</span></div>
+  <div class="item"><b>How do I continue in a new chat or with a different model?</b><span class="a">Use the resume line in Facts #8. Everything needed lives in the repo and the issues.</span></div>
+  <div class="item"><b>The robot and I edited at the same time — rebase conflict on a park line.</b><span class="a">Keep the sliced version (your side), drop the robot's park line, continue the rebase.</span></div>
+  <div class="item"><b>A thought I already sliced is still sitting in Unsorted on the live page.</b><span class="a">That's the robot's stale park line — delete it from the map and republish.</span></div>
+  <div class="item"><b>Leftover git stash entry from the publish rhythm?</b><span class="a">Inspect it with git stash show -p. If its content is already committed and live, drop it.</span></div>
+  <div class="item"><b>Do issue comments re-render the page?</b><span class="a">No — only issue body edits and new issues do.</span></div>
+
+  <a class="back" href="index.html">← all ideas</a>
+  <footer>idea-slicer · the rulebook is hand-written — the robot never overwrites it</footer>
+
+</div>
+</body>
+</html>

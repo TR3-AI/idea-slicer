@@ -315,6 +315,17 @@ for (const issue of ideas) {
     console.log(`posted map link on issue #${issue.number}`);
   }
 }
+if (fs.existsSync("rulebook.html")) {
+  manifest.push({
+    file: "rulebook.html",
+    title: "Skill rulebook",
+    desc: "How idea-slicer works — the rules, the verified facts, and the FAQs.",
+    date: new Date().toISOString().slice(0, 10),
+    emoji: "📖",
+    status: "done",
+    issue: "",
+  });
+}
 manifest.sort((a, b) => String(b.date).localeCompare(String(a.date)));
 fs.writeFileSync("pages.json", JSON.stringify(manifest, null, 2) + "\n");
 console.log(`rendered ${ideas.length} idea(s)`);
