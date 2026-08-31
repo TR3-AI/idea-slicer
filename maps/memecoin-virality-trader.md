@@ -3,7 +3,7 @@ Status: open
 Updated: 2026-08-30
 Emoji: 🪙
 System: greenfield
-Recommended: 9 departments, 9 sections, 7 genuine modules
+Recommended: 9 departments, 10 sections, 7 genuine modules
 
 Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RSI divergence — it alerts Bobby. Only when he clicks buy does the automation take over: entry with an immediate 30% stop-loss, then the fixed exit ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
 
@@ -31,7 +31,8 @@ flowchart TD
   J -- "✅ Divergence (either)" --> AL["🔔 Divergence alert<br>→ front-end UI"]
   AL --> BUY{"👆 Bobby clicks buy?<br>(the manual bit)"}
   BUY -- "❌ Ignored" --> R6["🚫 No trade — log"]
-  BUY -- "✅ Buy clicked" --> EN["🟢 Enter — 30% stop-loss set immediately<br>🤖 automated from here on"]
+  BUY -- "✅ Buy clicked" --> SZ["🎲 Fractional Kelly sizes the entry<br>(safer slice of the Kelly-optimal size)"]
+  SZ --> EN["🟢 Enter — 30% stop-loss set immediately<br>🤖 automated from here on"]
   EN --> L{"📈 Price reaches<br>2x?"}
   L -- "⏳" --> L
   L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
@@ -54,7 +55,7 @@ flowchart TD
 5. Signal & trigger (OBV/RSI divergence + staleness guards + alert)
 6. Front-end UI (divergence alert + manual buy button)
 7. Trade executor (Solana, sell-into-volume)
-8. Position manager (2x rule, moon bag, clip ladder)
+8. Position manager (fractional Kelly sizing, 2x rule, moon bag, clip ladder)
 9. Trade journal (every gate + fill logged)
 
 ## Departments
@@ -156,12 +157,12 @@ Completes when: Bobby sees a divergence alert and one tap turns it into an execu
 Boundary: owns display and Bobby's manual actions only; never decides anything and never touches the chain directly
 Owns: divergence alert display, manual buy button, positions + moon bag view
 Inputs: divergence alerts (Signal & trigger), positions + moon bag read model (Position manager)
-Outputs: manual buy command (entry + set 30% stop) → Trade executor
+Outputs: manual buy click → Position manager (sizes it before anything executes)
 Needs from: Signal & trigger, Trade executor
 Steps:
 1. Pin the contract: alert payload (coin, scores, divergence type, freshness) and buy-command shape
 2. Show the divergence alert clearly enough to decide in seconds: coin, which oscillator diverged, how fresh it is
-3. One obvious BUY button — clicking it sends the buy command to the executor and starts the automation
+3. One obvious BUY button — clicking it sends the buy click to the Position manager, which sizes the entry and starts the automation
 4. Show open positions and the moon bag status from the position feed (the moon bag's manual home — see Unresolved)
 
 ### Trade executor
@@ -172,12 +173,12 @@ Starts when: Bobby supplies the Solana wallet + keys (owner dependency) and the 
 Completes when: a manual buy executes with the 30% stop attached and exits fill correctly on devnet, including the sell-into-volume rule
 Boundary: owns transaction construction and fills; does not own when or why to trade
 Owns: entries (manual-triggered only), exits, sell-into-volume filter (green candle + volume only), fill reporting
-Inputs: manual buy command (Front-end UI), clip orders (Position manager), wallet keys (owner)
+Inputs: sized entry order (Position manager), clip orders (Position manager), wallet keys (owner)
 Outputs: fills → Position manager, Trade journal
-Needs from: Front-end UI
+Needs from: Position manager
 Steps:
 1. Receive the Solana wallet + keys from Bobby (referenced by secret name, never stored raw)
-2. Execute the entry only when Bobby's buy command arrives from the UI — the alert alone never spends money
+2. Execute the entry when the sized order arrives from the Position manager — sized by fractional Kelly after Bobby's click; the alert alone never spends money
 3. Set the 30% stop-loss immediately on entry — the automation starts at this exact moment
 4. Execute exits only into buy pressure: green candles and real volume, never into red
 5. Report every fill with price, size, and timestamp
@@ -185,20 +186,21 @@ Steps:
 ### Position manager
 Readiness: contract
 Icon: 💰
-Responsibility: Run the automated exit ladder from Bobby's manual entry to flat — 2x rule, moon bag, and the clip strategy. One team because the ladder shares position state across every step.
-Starts when: the first fill arrives from the Trade executor
+Responsibility: Size every entry with fractional Kelly, then run the automated exit ladder from Bobby's manual entry to flat — 2x rule, moon bag, and the clip strategy. One team because sizing and the ladder share position state.
+Starts when: Bobby clicks BUY in the Front-end UI (and the Kelly inputs are supplied — see owner dependencies)
 Completes when: the position (moon bag aside) is flat and the result is logged
-Boundary: owns the ladder and its state; does not own signal detection or transaction building
-Owns: 2x initial-capital recovery, 20% moon bag rule, 15–20% divergence clips, position state
-Inputs: fills (Trade executor), bearish divergences (Signal & trigger), live price + volume (chart provider — shared foundation)
-Outputs: clip orders → Trade executor; results → Trade journal; moon bag → Bobby (manual)
-Needs from: Trade executor
+Boundary: owns sizing and the ladder state; does not own signal detection or transaction building
+Owns: fractional Kelly sizing, 2x initial-capital recovery, 20% moon bag rule, 15–20% divergence clips, position state
+Inputs: manual buy click (Front-end UI), fills (Trade executor), bearish divergences (Signal & trigger), live price + volume (chart provider — shared foundation), Kelly inputs (owner: bankroll, win-rate + payoff estimates, chosen fraction)
+Outputs: sized entry order + clip orders → Trade executor; results → Trade journal; moon bag → Front-end UI (manual)
+Needs from: Front-end UI, Trade executor
 Steps:
-1. Pin the contract with Trade executor: fill events and clip-order shape
-2. At 2x: withdraw the initial capital — from here it is house money
-3. Set aside 20% of the remaining profit as the moon bag (never auto-sold; manual at Bobby's discretion)
-4. On each OBV/RSI divergence (ideally both): order a clip of 15–20% of the remaining 80%, routed through the executor's sell-into-volume filter
-5. Repeat until flat; log the result and hand the moon bag to Bobby
+1. Pin the contracts: buy-click shape, sized entry order, fill events, clip orders
+2. On Bobby's click: size the entry with fractional Kelly (Kelly = a formula for the optimal bet fraction from win rate and odds; fractional = deliberately take only a slice of it, safer) and send the sized entry order to the executor
+3. At 2x: withdraw the initial capital — from here it is house money
+4. Set aside 20% of the remaining profit as the moon bag (never auto-sold; manual at Bobby's discretion)
+5. On each OBV/RSI divergence (ideally both): order a clip of 15–20% of the remaining 80%, routed through the executor's sell-into-volume filter
+6. Repeat until flat; log the result and hand the moon bag to Bobby
 
 ### Trade journal
 Readiness: ready-mocks
@@ -238,20 +240,23 @@ Steps:
 - Bundler checker → Signal & trigger | Supplies: clean candidate (with call-out time + price) | Type: soft-internal | Blocking: no | Mockable: yes
 - Signal & trigger → Front-end UI | Supplies: divergence alert payload | Type: soft-internal | Blocking: no | Mockable: yes
 - Bobby → Front-end UI | Supplies: the manual buy decision (the human gate) | Type: owner | Blocking: yes | Mockable: no
-- Front-end UI → Trade executor | Supplies: manual buy command (+ 30% stop instruction) | Type: soft-internal | Blocking: no | Mockable: yes
+- Bobby → Position manager | Supplies: Kelly inputs — bankroll figure, win-rate + payoff estimates, chosen fraction | Type: owner | Blocking: yes | Mockable: yes
+- Front-end UI → Position manager | Supplies: manual buy click | Type: soft-internal | Blocking: no | Mockable: yes
+- Position manager → Trade executor | Supplies: sized entry order (fractional Kelly) + clip orders | Type: soft-internal | Blocking: no | Mockable: yes
 - Position manager → Front-end UI | Supplies: positions + moon bag read model | Type: soft-internal | Blocking: no | Mockable: yes
 - Trade executor → Position manager | Supplies: fills | Type: soft-internal | Blocking: no | Mockable: yes
 - All departments → Trade journal | Supplies: events | Type: shared-foundation | Blocking: no | Mockable: yes
 
 ## Snap ranking
 1. Trade executor → Position manager — Snap 5 — fills feed the ladder directly through one event schema — freeze the fill-event contract first
-2. Signal & trigger → Front-end UI — Snap 4 — one alert payload — freeze the alert schema
-3. Front-end UI → Trade executor — Snap 4 — one buy-command object with the stop instruction — pin the command shape + idempotency rule
-4. Virality scorer → Narrative analysis — Snap 4 — candidate passes with its metrics attached — freeze the candidate schema
-5. Callout intake → Virality scorer — Snap 3 — needs the normalized coin+tweet shape — define the normalizer output
-6. Narrative analysis → Bundler checker — Snap 3 — pass-through plus the Grok scores — extend the candidate schema
-7. Bundler checker → Signal & trigger — Snap 3 — clean candidate with bundler verdict attached — extend the candidate schema again
-8. Chart provider → Signal & trigger + Position manager — Snap 3 — two consumers of one provider — pick the provider early; it is a shared foundation
+2. Position manager → Trade executor — Snap 5 — sized entry order and clip orders share the same channel schema — freeze the executor contract once
+3. Signal & trigger → Front-end UI — Snap 4 — one alert payload — freeze the alert schema
+4. Front-end UI → Position manager — Snap 4 — one buy-click payload — pin the command shape + idempotency rule
+5. Virality scorer → Narrative analysis — Snap 4 — candidate passes with its metrics attached — freeze the candidate schema
+6. Callout intake → Virality scorer — Snap 3 — needs the normalized coin+tweet shape — define the normalizer output
+7. Narrative analysis → Bundler checker — Snap 3 — pass-through plus the Grok scores — extend the candidate schema
+8. Bundler checker → Signal & trigger — Snap 3 — clean candidate with bundler verdict attached — extend the candidate schema again
+9. Chart provider → Signal & trigger + Position manager — Snap 3 — two consumers of one provider — pick the provider early; it is a shared foundation
 
 ## Parallel readiness
 - Can start in parallel now: Callout intake, Virality scorer, Narrative analysis, Bundler checker, Trade journal (all with mocks)
@@ -295,6 +300,8 @@ MEMECOIN VIRALITY TRADER
 │       ├── Solana execution adapter (module: external-adapter)
 │       └── sell-into-volume filter (feature)
 ├── POSITION MANAGER
+│   ├── Entry sizing (section)
+│   │   └── fractional Kelly calculator (feature)
 │   └── Exit ladder (section)
 │       ├── exit ladder state machine (module: project-specific)
 │       ├── moon bag vault (feature)
@@ -305,6 +312,7 @@ MEMECOIN VIRALITY TRADER
 ```
 
 ## Unresolved
+- Kelly inputs — owner-supplied: the bankroll figure it sizes against, win-rate + payoff estimates (from backtest results or a fixed assumption), and the chosen fraction (half-Kelly? quarter?). The Position manager cannot size a trade until these are pinned
 - Alert expiry — material: how long does a divergence alert stay valid while it waits for Bobby's click? A stale alert could buy a dead setup; needs an expiry rule (tied to the 15-candle window?)
 - Bundler data provider choice — external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract
 - X API access — owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision
@@ -313,10 +321,12 @@ MEMECOIN VIRALITY TRADER
 - Moon bag handling — owner input: the Front-end UI is now its natural home (view + manual sell); confirm that's the plan or it stays a wallet operation
 
 ## Unsorted
+<<<<<<< Updated upstream
 - fractional Kelly is the sizing rule. [#7] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - Once the divergence alert triggers, I manually click buy from the front-end UI. From that point everything is automated: 30% stop-loss immediately, 2x trigger,  [#6] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
+=======
+>>>>>>> Stashed changes
 - Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
-- Fractional Kelly sizing — from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says
 
 ## Raw log
 - Full workflow, end to end. Call out from a vetted source → tweet 30-day baseline + virality multiplier → Grok combined score (6.5+ with tweet, 8+ without) → watch: holder quality (bundlers, snipers, reduction trend), age-based chart → setup: descending triangle or pennant, pattern start, breakout → two-leg divergence inside pattern (pivots, price vs OBV/RSI) → entry, fractional Kelly, 30% stop → 2X recover initial, cancel stop → 15% sells per bearish divergence → moon bag manual
@@ -326,10 +336,11 @@ MEMECOIN VIRALITY TRADER
 - Tiers restated as the complete rule: we look at tweets above their normal baseline combined with token creation time — under 1 hour: 3x above baseline; 1 to 6 hours: 10x above baseline; 24 hours plus: 50x above baseline. Anything outside these tiers (incl. 6–24h) is not considered.
 - Signal change [#5]: remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price divergence with OBV, RSI, or both. Entry signal: OBV or RSI chart divergence (both better, either works).
 - Manual gate + staleness guards [#6]: once the divergence alert triggers, Bobby manually clicks buy from the front-end UI; from that point everything is automated (30% stop immediately, 2x trigger, 20% moon bag untouched, 15–20% profit clips). New rules after call-out: stop tracking divergence if price rises more than 30% from the call-out (distance), or if more than 15 one-minute candles pass (time — can combine with distance).
+- Ruling [#7]: fractional Kelly is the sizing rule — graduated from Unsorted into the Position manager (Entry sizing section).
 
 ## Consolidation report
 Departments: 11 candidates → 9 final (Front-end UI added as the manual gate [#6]; pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
-Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)
+Modules: 10 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config; fractional Kelly calculator classified as a feature — one calculation, per the doctrine)
 
 ## Diagram
 ```mermaid
@@ -356,7 +367,7 @@ flowchart TD
     X1["💥 Entries"] --> X2["🟢 Exits into volume only"]
   end
   subgraph POS["💰 8 · Position manager"]
-    P1["✌️ 2x: withdraw initial"] --> P2["🌙 20% moon bag"] --> P3["✂️ Clip 15–20% per divergence"]
+    P0["🎲 Fractional Kelly sizing"] --> P1["✌️ 2x: withdraw initial"] --> P2["🌙 20% moon bag"] --> P3["✂️ Clip 15–20% per divergence"]
   end
   subgraph LOG["📓 9 · Trade journal"]
     L1["✍️ Log everything"]
@@ -367,7 +378,8 @@ flowchart TD
   G2 ==> B1
   B2 ==> T1
   T3 ==> U1
-  U2 ==> X1
+  U2 ==> P0
+  P0 ==> X1
   X2 ==> P1
   T2 -.->|bearish divergence while holding| P3
   P2 -.->|moon bag status| U3
