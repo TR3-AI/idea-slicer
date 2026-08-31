@@ -3,9 +3,9 @@ Status: open
 Updated: 2026-08-30
 Emoji: 🪙
 System: greenfield
-Recommended: 8 departments, 10 sections, 7 genuine modules
+Recommended: 8 departments, 8 sections, 7 genuine modules
 
-Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a chart breakout with divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
+Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RSI divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
 
 ## Operating flow
 ```mermaid
@@ -21,10 +21,10 @@ flowchart TD
   F -- "✅ Pass" --> G["🧬 Bundler check:<br>% share of supply + trend (down / flat / up)"]
   G --> H{"🚫 Bundlers<br>> 10–15%?"}
   H -- "❌ Too many" --> R4["🚫 Reject — log reason"]
-  H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>pennant or descending triangle forming"]
-  I --> J{"💥 Breakout + OBV and/or RSI<br>divergence inside the pattern?"}
+  H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>price action vs OBV and RSI"]
+  I --> J{"🔀 OBV or RSI divergence?<br>(both together = stronger signal)"}
   J -- "⏳ Not yet" --> I
-  J -- "✅ Trigger" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
+  J -- "✅ Divergence (either)" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
   K --> L{"📈 Price reaches<br>2x?"}
   L -- "⏳" --> L
   L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
@@ -44,7 +44,7 @@ flowchart TD
 2. Virality scorer (30-day baseline + age-tiered multiplier gates)
 3. Narrative analysis (Grok 4.6, combined score > 8)
 4. Bundler checker (strict ≤10–15% rule)
-5. Signal & trigger (pattern + divergence + 30% stop)
+5. Signal & trigger (OBV/RSI divergence + 30% stop)
 6. Trade executor (Solana, sell-into-volume)
 7. Position manager (2x rule, moon bag, clip ladder)
 8. Trade journal (every gate + fill logged)
@@ -123,20 +123,20 @@ Steps:
 ### Signal & trigger
 Readiness: contract
 Icon: 📈
-Responsibility: Watch clean candidates' charts and fire the entry only when pattern and divergence agree. One team, because the divergence check only counts inside the pattern window — shared state.
+Responsibility: Watch clean candidates' charts and fire the entry when price and oscillators disagree — divergence only; pattern detection is parked for accuracy testing.
 Starts when: the qualified-candidate contract is frozen
-Completes when: a validated entry signal fires (pattern + breakout + divergence) or the coin dies unwatched
-Boundary: owns chart geometry and oscillators; does not own order execution
-Owns: pennant / descending-triangle detection, breakout watch, OBV divergence, RSI divergence, entry trigger, immediate 30% stop rule
+Completes when: a validated divergence entry signal fires (OBV or RSI, both = stronger) or the coin dies unwatched
+Boundary: owns divergence detection and the entry trigger; does not own order execution — and does not own pattern detection until it survives testing
+Owns: OBV divergence, RSI divergence, entry trigger, immediate 30% stop rule
 Inputs: clean candidate (Bundler checker), chart data OHLC + OBV/RSI (chart provider — external)
 Outputs: trade intent (entry + 30% stop) → Trade executor; bearish divergences while holding → Position manager
 Needs from: Bundler checker
 Steps:
 1. Pin the contract with Bundler checker: clean-candidate payload
-2. Detect a pennant or descending triangle (price squeezing into a tighter range); prefer descending triangle
-3. Mark the pattern start — divergence checks only count inside this window, never far back
-4. Wait for the breakout; on breakout, confirm OBV divergence, RSI divergence, or both inside the pattern
-5. Fire the entry signal with an immediate 30% stop-loss attached
+2. Track price against OBV (on-balance volume = running total of volume direction) and RSI (relative strength index = momentum gauge)
+3. Entry signal: a divergence on either oscillator — price makes a new high/low and the oscillator doesn't follow; both diverging together is the stronger version but either one qualifies
+4. Fire the entry signal with an immediate 30% stop-loss attached
+5. While holding: keep flagging bearish divergences for the Position manager's clip strategy
 
 ### Trade executor
 Readiness: waiting-owner
@@ -250,8 +250,8 @@ MEMECOIN VIRALITY TRADER
 │       ├── bundler data adapter (module: external-adapter)
 │       └── trend classifier (feature)
 ├── SIGNAL & TRIGGER
-│   └── Setup watcher (section)
-│       ├── chart setup detector (module: project-specific)
+│   └── Divergence watch (section)
+│       ├── divergence detector (module: project-specific)
 │       └── entry trigger + 30% stop (feature)
 ├── TRADE EXECUTOR
 │   └── On-chain execution (section)
@@ -275,7 +275,7 @@ MEMECOIN VIRALITY TRADER
 - Moon bag handling — owner input: where it lives and how Bobby sells it manually (dashboard, wallet, or nothing to build)
 
 ## Unsorted
-- Remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price [#5] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
+- Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
 - Fractional Kelly sizing — from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says
 
 ## Raw log
@@ -284,9 +284,10 @@ MEMECOIN VIRALITY TRADER
 - Detailed bot logic: 1) Tweet/coin qualification — tweet within 1h of coin creation stays viable; minimum multiplier (3x over 30-day baseline) = potential runner. 2) Grok analysis — Grok 4.6 with pre-generated prompt: narrative, thesis, sentiment, veracity score, attention score via X search; combined score must be over 8. 3) Bundler verification — % share trending down/flat/up, 0% ideal; strict rule: nothing over 10-15% bundlers, ideally below 10%. 4) TA and trigger — pennant or descending triangle; breakout + OBV and/or RSI divergence inside the pattern; enter and set 30% stop-loss immediately. 5) Profit taking — at 2x withdraw initial capital; 20% of remaining profit as moon bag (manual only); clip the remaining 80% by selling 15-20% on each OBV/RSI divergence; only sell into volume (buy pressure, green candles).
 - Corrections: it's virality, not veracity. Score gate is dual — with a tweet the combined score must be 6; with no tweet it must be over 8. Delay exception: 24 hours or more is only acceptable at 50x multiplier or more. Age bands: under 1 hour → multiplier 3x or more; 1 to 6 hours → multiplier at least 10x.
 - Tiers restated as the complete rule: we look at tweets above their normal baseline combined with token creation time — under 1 hour: 3x above baseline; 1 to 6 hours: 10x above baseline; 24 hours plus: 50x above baseline. Anything outside these tiers (incl. 6–24h) is not considered.
+- Signal change [#5]: remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price divergence with OBV, RSI, or both. Entry signal: OBV or RSI chart divergence (both better, either works).
 
 ## Consolidation report
-Departments: 10 candidates → 8 final (pattern + divergence merged into Signal & trigger — divergence only counts inside the pattern window, shared state; Kelly sizing demoted to Unsorted, not in the authoritative flow)
+Departments: 10 candidates → 8 final (pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
 Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)
 
 ## Diagram
@@ -305,7 +306,7 @@ flowchart TD
     B1["🔍 % share + trend"] --> B2["🚫 ≤ 10–15% rule"]
   end
   subgraph SIG["📈 5 · Signal & trigger"]
-    T1["📐 Pattern watch"] --> T2["💥 Breakout + divergence"] --> T3["🟢 Entry + 30% stop"]
+    T1["📉 Price vs OBV/RSI watch"] --> T2["🔀 Divergence confirmed"] --> T3["🟢 Entry + 30% stop"]
   end
   subgraph EXEC["⚡ 6 · Trade executor"]
     X1["💥 Entries"] --> X2["🟢 Exits into volume only"]
