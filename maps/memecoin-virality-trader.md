@@ -275,6 +275,7 @@ MEMECOIN VIRALITY TRADER
 - Moon bag handling — owner input: where it lives and how Bobby sells it manually (dashboard, wallet, or nothing to build)
 
 ## Unsorted
+- Once the divergence alert triggers, I manually click buy from the front-end UI. From that point everything is automated: 30% stop-loss immediately, 2x trigger,  [#6] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
 - Fractional Kelly sizing — from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says
 
