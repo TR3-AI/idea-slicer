@@ -275,6 +275,7 @@ MEMECOIN VIRALITY TRADER
 - Moon bag handling — owner input: where it lives and how Bobby sells it manually (dashboard, wallet, or nothing to build)
 
 ## Unsorted
+- Remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price [#5] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - Fractional Kelly sizing — from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says
 
 ## Raw log
