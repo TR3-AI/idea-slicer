@@ -126,6 +126,8 @@ function parse(issue) {
     report,
     unresolved: [...section("Unresolved").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     unsorted: [...section("Unsorted").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
+    facts: [...section("Facts").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
+    faqs: [...section("FAQs").matchAll(/^- (.+)$/gm)].map((x) => x[1].trim()),
     mermaid: mermaidIn("Diagram") || meta2(body, /```mermaid\n([\s\S]*?)```/),
   };
 }
@@ -260,6 +262,12 @@ function renderHtml(p, issue) {
   const unsortedHtml = p.unsorted.length
     ? p.unsorted.map(itemHtml).join("\n")
     : `<div class="item"><span>Nothing parked — every thought has a home.</span></div>`;
+  const factsHtml = p.facts.length
+    ? p.facts.map(itemHtml).join("\n")
+    : `<div class="item"><span>No facts pinned yet — confirmed rulings land here.</span></div>`;
+  const faqsHtml = p.faqs.length
+    ? p.faqs.map(itemHtml).join("\n")
+    : `<div class="item"><span>No FAQs yet.</span></div>`;
   return tpl
     .replaceAll("{{TITLE}}", esc(p.title))
     .replaceAll("{{SUB}}", esc(p.summary))
@@ -277,7 +285,9 @@ function renderHtml(p, issue) {
     .replace("{{GRAPH_JSON}}", graphJson)
     .replace("{{SNAPS}}", snapsHtml)
     .replace("{{UNRESOLVED}}", unresolvedHtml)
-    .replace("{{UNSORTED}}", unsortedHtml);
+    .replace("{{UNSORTED}}", unsortedHtml)
+    .replace("{{FACTS}}", factsHtml)
+    .replace("{{FAQS}}", faqsHtml);
 }
 
 // ── 4. rebuild pages + manifest ──

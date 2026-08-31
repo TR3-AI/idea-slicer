@@ -326,6 +326,26 @@ MEMECOIN VIRALITY TRADER
 ## Unsorted
 - Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
 
+## Facts
+- Gate tiers — a tweet qualifies by multiplier over its 30-day baseline, by coin age: under 1h ≥3x · 1–6h ≥10x · 24h+ ≥50x. Anything outside these tiers (including 6–24h) is rejected
+- Dual score gate — with a tweet the combined Grok score must be ≥6; with no tweet it must be >8
+- It's virality, not veracity — the score gates attention, not truth
+- Bundlers — reject anything over 10–15% (below 10% preferred), especially if the share is increasing
+- Entry signal — OBV or RSI divergence only (both = stronger); chart patterns are parked for testing [#5]
+- The buy is manual — a divergence fires an alert; nothing spends money until Bobby clicks buy; everything after the click is automated [#6]
+- Staleness guards — stop tracking a call-out if price runs +30% from it or 15 one-minute candles pass [#6]
+- Position size — fractional Kelly, pre-filled into the alert; the Grok score never touches size [#7][#8]
+- Exits — 30% stop-loss set at entry; at 2x the initial capital comes out; 20% of the rest is a manual-only moon bag; the remainder clips 15–20% per bearish divergence, sells only into green candles + real volume
+- Venues — Solana and the Robinhood Chain (Robinhood's Arbitrum-based EVM L2), whichever lists the coin [#8][#9]
+
+## FAQs
+- Does the bot ever buy by itself? — No. It watches, scores, and alerts; Bobby's click is the only way money moves
+- What decides how big the buy is? — Fractional Kelly, computed when the alert fires and shown pre-filled. The Grok score decides whether, never how much
+- What counts as viral enough? — The coin's tweet must beat its account's 30-day baseline by the age-band multiplier: 3x under an hour, 10x up to 6 hours, 50x at 24+ hours
+- What happens exactly at 2x? — The initial capital is withdrawn, the stop on it is cancelled; 20% of what remains becomes a manual-only moon bag
+- Where do the trades actually execute? — On Solana or on the Robinhood Chain (an EVM L2) — the executor routes to whichever chain lists the coin
+- Can a descending triangle or pennant trigger an entry? — Not in the MVP. Patterns are parked in Unsorted until their accuracy is tested [#5]
+
 ## Raw log
 - Full workflow, end to end. Call out from a vetted source → tweet 30-day baseline + virality multiplier → Grok combined score (6.5+ with tweet, 8+ without) → watch: holder quality (bundlers, snipers, reduction trend), age-based chart → setup: descending triangle or pennant, pattern start, breakout → two-leg divergence inside pattern (pivots, price vs OBV/RSI) → entry, fractional Kelly, 30% stop → 2X recover initial, cancel stop → 15% sells per bearish divergence → moon bag manual
 - Step 1: Get a callout — track callouts from a group of traders or devs, usually on pump.fun or FOMO, via web or mobile. Step 2: Check the coin and tweet metrics — likes and retweets over 30 days for an average baseline, compare against the coin's tweet, check the multiplier; threshold customizable, hypothetically minimum 3x. Multiplier rule: if the tweet is over 50x its normal baseline, whether the coin is traded 24 hours later makes no difference, we still… [cut off]
