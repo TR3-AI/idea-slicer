@@ -3,9 +3,9 @@ Status: open
 Updated: 2026-08-30
 Emoji: 🪙
 System: greenfield
-Recommended: 8 departments, 8 sections, 7 genuine modules
+Recommended: 9 departments, 9 sections, 7 genuine modules
 
-Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RSI divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
+Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RSI divergence — it alerts Bobby. Only when he clicks buy does the automation take over: entry with an immediate 30% stop-loss, then the fixed exit ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
 
 ## Operating flow
 ```mermaid
@@ -23,9 +23,16 @@ flowchart TD
   H -- "❌ Too many" --> R4["🚫 Reject — log reason"]
   H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>price action vs OBV and RSI"]
   I --> J{"🔀 OBV or RSI divergence?<br>(both together = stronger signal)"}
-  J -- "⏳ Not yet" --> I
-  J -- "✅ Divergence (either)" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
-  K --> L{"📈 Price reaches<br>2x?"}
+  J -- "⏳ Not yet" --> S1{"📏 Price up >30%<br>from call-out?"}
+  S1 -- "❌ Too far" --> R5["🚫 Stop tracking — log reason"]
+  S1 -- "✅ Within" --> S2{"⏱️ >15 one-minute<br>candles since call-out?"}
+  S2 -- "❌ Stale" --> R5
+  S2 -- "✅ Fresh" --> I
+  J -- "✅ Divergence (either)" --> AL["🔔 Divergence alert<br>→ front-end UI"]
+  AL --> BUY{"👆 Bobby clicks buy?<br>(the manual bit)"}
+  BUY -- "❌ Ignored" --> R6["🚫 No trade — log"]
+  BUY -- "✅ Buy clicked" --> EN["🟢 Enter — 30% stop-loss set immediately<br>🤖 automated from here on"]
+  EN --> L{"📈 Price reaches<br>2x?"}
   L -- "⏳" --> L
   L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
   M --> N["🌙 20% of remaining profit → moon bag<br>(never auto-sold — manual only)"]
@@ -44,10 +51,11 @@ flowchart TD
 2. Virality scorer (30-day baseline + age-tiered multiplier gates)
 3. Narrative analysis (Grok 4.6, combined score > 8)
 4. Bundler checker (strict ≤10–15% rule)
-5. Signal & trigger (OBV/RSI divergence + 30% stop)
-6. Trade executor (Solana, sell-into-volume)
-7. Position manager (2x rule, moon bag, clip ladder)
-8. Trade journal (every gate + fill logged)
+5. Signal & trigger (OBV/RSI divergence + staleness guards + alert)
+6. Front-end UI (divergence alert + manual buy button)
+7. Trade executor (Solana, sell-into-volume)
+8. Position manager (2x rule, moon bag, clip ladder)
+9. Trade journal (every gate + fill logged)
 
 ## Departments
 
@@ -123,42 +131,61 @@ Steps:
 ### Signal & trigger
 Readiness: contract
 Icon: 📈
-Responsibility: Watch clean candidates' charts and fire the entry when price and oscillators disagree — divergence only; pattern detection is parked for accuracy testing.
+Responsibility: Watch clean candidates' charts while they're fresh, and when price and oscillators disagree, raise the alert. It never spends money — Bobby clicks buy.
 Starts when: the qualified-candidate contract is frozen
-Completes when: a validated divergence entry signal fires (OBV or RSI, both = stronger) or the coin dies unwatched
-Boundary: owns divergence detection and the entry trigger; does not own order execution — and does not own pattern detection until it survives testing
-Owns: OBV divergence, RSI divergence, entry trigger, immediate 30% stop rule
+Completes when: a divergence alert reaches Bobby in time for him to act, or the coin is dropped as stale
+Boundary: owns divergence detection, the staleness guards, and the alert; does not own the buy decision, execution, or pattern detection (parked)
+Owns: OBV divergence, RSI divergence, 30% distance guard, 15-candle freshness window, divergence alert
 Inputs: clean candidate (Bundler checker), chart data OHLC + OBV/RSI (chart provider — external)
-Outputs: trade intent (entry + 30% stop) → Trade executor; bearish divergences while holding → Position manager
+Outputs: divergence alert → Front-end UI; bearish divergences while holding → Position manager
 Needs from: Bundler checker
 Steps:
-1. Pin the contract with Bundler checker: clean-candidate payload
+1. Pin the contract with Bundler checker: clean-candidate payload (must include call-out time and call-out price)
 2. Track price against OBV (on-balance volume = running total of volume direction) and RSI (relative strength index = momentum gauge)
-3. Entry signal: a divergence on either oscillator — price makes a new high/low and the oscillator doesn't follow; both diverging together is the stronger version but either one qualifies
-4. Fire the entry signal with an immediate 30% stop-loss attached
-5. While holding: keep flagging bearish divergences for the Position manager's clip strategy
+3. Staleness guards while watching — distance: stop tracking if price rises more than 30% from the call-out; time: stop tracking once 15 one-minute candles have passed since the call-out (the two can combine); either way, drop and log
+4. Entry signal: a divergence on either oscillator — price makes a new high/low and the oscillator doesn't follow; both diverging together is the stronger version but either one qualifies
+5. Fire the divergence alert to the Front-end UI — never an automatic entry
+6. While holding: keep flagging bearish divergences for the Position manager's clip strategy
+
+### Front-end UI
+Readiness: waiting-internal
+Icon: 🖥️
+Responsibility: Bobby's console — shows the divergence alert and turns his decision into the buy command. The single manual gate in an otherwise automated system.
+Starts when: Signal & trigger is emitting alerts and the executor can receive commands
+Completes when: Bobby sees a divergence alert and one tap turns it into an executed entry
+Boundary: owns display and Bobby's manual actions only; never decides anything and never touches the chain directly
+Owns: divergence alert display, manual buy button, positions + moon bag view
+Inputs: divergence alerts (Signal & trigger), positions + moon bag read model (Position manager)
+Outputs: manual buy command (entry + set 30% stop) → Trade executor
+Needs from: Signal & trigger, Trade executor
+Steps:
+1. Pin the contract: alert payload (coin, scores, divergence type, freshness) and buy-command shape
+2. Show the divergence alert clearly enough to decide in seconds: coin, which oscillator diverged, how fresh it is
+3. One obvious BUY button — clicking it sends the buy command to the executor and starts the automation
+4. Show open positions and the moon bag status from the position feed (the moon bag's manual home — see Unresolved)
 
 ### Trade executor
 Readiness: waiting-owner
 Icon: ⚡
-Responsibility: The only department that moves money — enters and exits on Solana, and only ever sells into buy pressure.
-Starts when: Bobby supplies the Solana wallet + keys (owner dependency) and the trade-intent contract is frozen
-Completes when: entries and exits fill correctly on devnet, including the sell-into-volume rule
+Responsibility: The only department that moves money — enters on Bobby's click and only his click, exits into buy pressure.
+Starts when: Bobby supplies the Solana wallet + keys (owner dependency) and the buy-command contract is frozen
+Completes when: a manual buy executes with the 30% stop attached and exits fill correctly on devnet, including the sell-into-volume rule
 Boundary: owns transaction construction and fills; does not own when or why to trade
-Owns: entries, exits, sell-into-volume filter (green candle + volume only), fill reporting
-Inputs: trade intent (Signal & trigger), clip orders (Position manager), wallet keys (owner)
+Owns: entries (manual-triggered only), exits, sell-into-volume filter (green candle + volume only), fill reporting
+Inputs: manual buy command (Front-end UI), clip orders (Position manager), wallet keys (owner)
 Outputs: fills → Position manager, Trade journal
-Needs from: Signal & trigger
+Needs from: Front-end UI
 Steps:
 1. Receive the Solana wallet + keys from Bobby (referenced by secret name, never stored raw)
-2. Execute the entry when a trade intent arrives
-3. Execute exits only into buy pressure: green candles and real volume, never into red
-4. Report every fill with price, size, and timestamp
+2. Execute the entry only when Bobby's buy command arrives from the UI — the alert alone never spends money
+3. Set the 30% stop-loss immediately on entry — the automation starts at this exact moment
+4. Execute exits only into buy pressure: green candles and real volume, never into red
+5. Report every fill with price, size, and timestamp
 
 ### Position manager
 Readiness: contract
 Icon: 💰
-Responsibility: Run the fixed exit ladder from entry to flat — 2x rule, moon bag, and the clip strategy. One team because the ladder shares position state across every step.
+Responsibility: Run the automated exit ladder from Bobby's manual entry to flat — 2x rule, moon bag, and the clip strategy. One team because the ladder shares position state across every step.
 Starts when: the first fill arrives from the Trade executor
 Completes when: the position (moon bag aside) is flat and the result is logged
 Boundary: owns the ladder and its state; does not own signal detection or transaction building
@@ -191,7 +218,7 @@ Steps:
 
 ## Correlated parallel groups
 - Group: Qualification gauntlet | Members: Callout intake + Virality scorer + Narrative analysis + Bundler checker | Snap: 4 | Mode: frozen-contract | Contract: candidate schema + gate order + pass/fail payload | Risk: four gates built with different assumptions about the candidate fields
-- Group: Trigger & execution | Members: Signal & trigger + Trade executor | Snap: 4 | Mode: frozen-contract | Contract: TradeIntent (entry + 30% stop) + idempotency rule | Risk: slippage and timing on pump.fun entries — a stale trigger fires a bad fill
+- Group: Trigger & execution | Members: Signal & trigger + Front-end UI + Trade executor | Snap: 4 | Mode: frozen-contract | Contract: alert payload + buy-command shape + idempotency | Risk: alert latency — a slow manual buy enters a stale divergence (see Unresolved: alert expiry)
 - Group: Exit management | Members: Trade executor + Position manager | Snap: 5 | Mode: frozen-contract | Contract: fill-event schema | Risk: a missed fill corrupts the ladder state (moon bag vs clip split goes wrong)
 
 ## Dependency matrix
@@ -208,25 +235,29 @@ Steps:
 - Callout intake → Virality scorer | Supplies: normalized candidate | Type: soft-internal | Blocking: no | Mockable: yes
 - Virality scorer → Narrative analysis | Supplies: qualified candidate (viable + ≥3x) | Type: soft-internal | Blocking: no | Mockable: yes
 - Narrative analysis → Bundler checker | Supplies: scored candidate (>8) | Type: soft-internal | Blocking: no | Mockable: yes
-- Bundler checker → Signal & trigger | Supplies: clean candidate | Type: soft-internal | Blocking: no | Mockable: yes
-- Signal & trigger → Trade executor | Supplies: trade intent + 30% stop | Type: soft-internal | Blocking: no | Mockable: yes
+- Bundler checker → Signal & trigger | Supplies: clean candidate (with call-out time + price) | Type: soft-internal | Blocking: no | Mockable: yes
+- Signal & trigger → Front-end UI | Supplies: divergence alert payload | Type: soft-internal | Blocking: no | Mockable: yes
+- Bobby → Front-end UI | Supplies: the manual buy decision (the human gate) | Type: owner | Blocking: yes | Mockable: no
+- Front-end UI → Trade executor | Supplies: manual buy command (+ 30% stop instruction) | Type: soft-internal | Blocking: no | Mockable: yes
+- Position manager → Front-end UI | Supplies: positions + moon bag read model | Type: soft-internal | Blocking: no | Mockable: yes
 - Trade executor → Position manager | Supplies: fills | Type: soft-internal | Blocking: no | Mockable: yes
 - All departments → Trade journal | Supplies: events | Type: shared-foundation | Blocking: no | Mockable: yes
 
 ## Snap ranking
 1. Trade executor → Position manager — Snap 5 — fills feed the ladder directly through one event schema — freeze the fill-event contract first
-2. Signal & trigger → Trade executor — Snap 4 — one trade-intent object with the stop attached — pin TradeIntent + idempotency rule
-3. Virality scorer → Narrative analysis — Snap 4 — candidate passes with its metrics attached — freeze the candidate schema
-4. Callout intake → Virality scorer — Snap 3 — needs the normalized coin+tweet shape — define the normalizer output
-5. Narrative analysis → Bundler checker — Snap 3 — pass-through plus the Grok scores — extend the candidate schema
-6. Bundler checker → Signal & trigger — Snap 3 — clean candidate with bundler verdict attached — extend the candidate schema again
-7. Chart provider → Signal & trigger + Position manager — Snap 3 — two consumers of one provider — pick the provider early; it is a shared foundation
+2. Signal & trigger → Front-end UI — Snap 4 — one alert payload — freeze the alert schema
+3. Front-end UI → Trade executor — Snap 4 — one buy-command object with the stop instruction — pin the command shape + idempotency rule
+4. Virality scorer → Narrative analysis — Snap 4 — candidate passes with its metrics attached — freeze the candidate schema
+5. Callout intake → Virality scorer — Snap 3 — needs the normalized coin+tweet shape — define the normalizer output
+6. Narrative analysis → Bundler checker — Snap 3 — pass-through plus the Grok scores — extend the candidate schema
+7. Bundler checker → Signal & trigger — Snap 3 — clean candidate with bundler verdict attached — extend the candidate schema again
+8. Chart provider → Signal & trigger + Position manager — Snap 3 — two consumers of one provider — pick the provider early; it is a shared foundation
 
 ## Parallel readiness
 - Can start in parallel now: Callout intake, Virality scorer, Narrative analysis, Bundler checker, Trade journal (all with mocks)
 - Can start in parallel after contract definition: Signal & trigger, Position manager
 - Must perform joint design first: —
-- Must wait for another department: —
+- Must wait for another department: Front-end UI (waits on Signal & trigger + Trade executor)
 - Blocked by external or owner dependency: Trade executor (waits on Bobby's Solana wallet + keys)
 
 ## Structure tree
@@ -252,7 +283,13 @@ MEMECOIN VIRALITY TRADER
 ├── SIGNAL & TRIGGER
 │   └── Divergence watch (section)
 │       ├── divergence detector (module: project-specific)
-│       └── entry trigger + 30% stop (feature)
+│       ├── staleness guards: +30% distance, 15-candle window (feature)
+│       └── divergence alert (feature)
+├── FRONT-END UI
+│   └── Trader console (section)
+│       ├── divergence alert display (feature)
+│       ├── manual buy button (feature)
+│       └── positions + moon bag view (feature)
 ├── TRADE EXECUTOR
 │   └── On-chain execution (section)
 │       ├── Solana execution adapter (module: external-adapter)
@@ -268,11 +305,12 @@ MEMECOIN VIRALITY TRADER
 ```
 
 ## Unresolved
+- Alert expiry — material: how long does a divergence alert stay valid while it waits for Bobby's click? A stale alert could buy a dead setup; needs an expiry rule (tied to the 15-candle window?)
 - Bundler data provider choice — external dependency: tools disagree on the % (creation-tx only vs full block, bonding-curve handling); one provider + counting method must be pinned, it changes the Bundler checker contract
 - X API access — owner-supplied: 30-day tweet pull + X-search attention score needs the right tier; cost/access decision
 - Chart data provider — external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal & trigger and Position manager
 - Tweet metric source — external choice: X API directly or a scraper (the earlier draft used ScrapingDog); pick one for the baseline engine
-- Moon bag handling — owner input: where it lives and how Bobby sells it manually (dashboard, wallet, or nothing to build)
+- Moon bag handling — owner input: the Front-end UI is now its natural home (view + manual sell); confirm that's the plan or it stays a wallet operation
 
 ## Unsorted
 - Once the divergence alert triggers, I manually click buy from the front-end UI. From that point everything is automated: 30% stop-loss immediately, 2x trigger,  [#6] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
@@ -286,9 +324,10 @@ MEMECOIN VIRALITY TRADER
 - Corrections: it's virality, not veracity. Score gate is dual — with a tweet the combined score must be 6; with no tweet it must be over 8. Delay exception: 24 hours or more is only acceptable at 50x multiplier or more. Age bands: under 1 hour → multiplier 3x or more; 1 to 6 hours → multiplier at least 10x.
 - Tiers restated as the complete rule: we look at tweets above their normal baseline combined with token creation time — under 1 hour: 3x above baseline; 1 to 6 hours: 10x above baseline; 24 hours plus: 50x above baseline. Anything outside these tiers (incl. 6–24h) is not considered.
 - Signal change [#5]: remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price divergence with OBV, RSI, or both. Entry signal: OBV or RSI chart divergence (both better, either works).
+- Manual gate + staleness guards [#6]: once the divergence alert triggers, Bobby manually clicks buy from the front-end UI; from that point everything is automated (30% stop immediately, 2x trigger, 20% moon bag untouched, 15–20% profit clips). New rules after call-out: stop tracking divergence if price rises more than 30% from the call-out (distance), or if more than 15 one-minute candles pass (time — can combine with distance).
 
 ## Consolidation report
-Departments: 10 candidates → 8 final (pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
+Departments: 11 candidates → 9 final (Front-end UI added as the manual gate [#6]; pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
 Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)
 
 ## Diagram
@@ -307,15 +346,18 @@ flowchart TD
     B1["🔍 % share + trend"] --> B2["🚫 ≤ 10–15% rule"]
   end
   subgraph SIG["📈 5 · Signal & trigger"]
-    T1["📉 Price vs OBV/RSI watch"] --> T2["🔀 Divergence confirmed"] --> T3["🟢 Entry + 30% stop"]
+    T1["📉 Price vs OBV/RSI watch"] --> T2["🔀 Divergence confirmed"] --> T3["🔔 Alert fired"]
   end
-  subgraph EXEC["⚡ 6 · Trade executor"]
+  subgraph UI["🖥️ 6 · Front-end UI"]
+    U1["🔔 Alert display"] --> U2["👆 Manual buy button"] --> U3["📊 Positions + moon bag view"]
+  end
+  subgraph EXEC["⚡ 7 · Trade executor"]
     X1["💥 Entries"] --> X2["🟢 Exits into volume only"]
   end
-  subgraph POS["💰 7 · Position manager"]
+  subgraph POS["💰 8 · Position manager"]
     P1["✌️ 2x: withdraw initial"] --> P2["🌙 20% moon bag"] --> P3["✂️ Clip 15–20% per divergence"]
   end
-  subgraph LOG["📓 8 · Trade journal"]
+  subgraph LOG["📓 9 · Trade journal"]
     L1["✍️ Log everything"]
   end
   I2 ==> V1
@@ -323,9 +365,11 @@ flowchart TD
   V3 ==> G1
   G2 ==> B1
   B2 ==> T1
-  T3 ==> X1
+  T3 ==> U1
+  U2 ==> X1
   X2 ==> P1
   T2 -.->|bearish divergence while holding| P3
+  P2 -.->|moon bag status| U3
   V3 -.-> L1
   G2 -.-> L1
   B2 -.-> L1
