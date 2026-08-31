@@ -321,6 +321,7 @@ MEMECOIN VIRALITY TRADER
 - Moon bag handling — owner input: the Front-end UI is now its natural home (view + manual sell); confirm that's the plan or it stays a wallet operation
 
 ## Unsorted
+- Position size is NOT chosen from the Grok score — it is pre-filled by fractional Kelly at alert time, so clicking buy is one action. Also: we trade not just on  [#8] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 <<<<<<< Updated upstream
 - fractional Kelly is the sizing rule. [#7] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - Once the divergence alert triggers, I manually click buy from the front-end UI. From that point everything is automated: 30% stop-loss immediately, 2x trigger,  [#6] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
