@@ -190,6 +190,18 @@
   }
   .unsorted .item span { color: var(--amber); font-weight: 700; }
   .unsorted .why { display: block; color: var(--soft); font-weight: 400; font-size: 13px; margin-top: 2px; }
+  .facts .item {
+    background: rgba(46, 168, 138, .06); border: 2px solid rgba(46, 168, 138, .35);
+    border-radius: 16px; padding: 12px 16px; margin: 8px 0; font-size: 14.5px;
+  }
+  .facts .item span { color: var(--b-now); font-weight: 700; }
+  .facts .item .why { display: block; color: var(--soft); font-weight: 400; font-size: 13px; margin-top: 2px; }
+  .faqs .item {
+    background: var(--card); border: 2px solid var(--line); box-shadow: var(--shadow);
+    border-radius: 16px; padding: 12px 16px; margin: 8px 0; font-size: 14.5px;
+  }
+  .faqs .item span { color: var(--purple); font-weight: 700; }
+  .faqs .item .why { display: block; color: var(--soft); font-weight: 400; font-size: 13px; margin-top: 2px; }
 
   /* ── dependency web ────────────────────────────────── */
   .web { background: var(--card); border-radius: 22px; box-shadow: var(--shadow); padding: 10px 10px 4px; }
@@ -411,6 +423,16 @@ flowchart TD
     <div class="item"><span>alerts</span><span class="why">ping me when a trade opens or closes (Telegram?) [#3] — arrived via GitHub, not yet sliced — run /ideaslicer to place it</span></div>
 <div class="item"><span>max position size</span><span class="why">never risk more than 2% of the account on a single trade [#2] — arrived via GitHub, not yet sliced — run /ideaslicer to place it</span></div>
 <div class="item"><span>backtesting??</span><span class="why">could be its own Strategy department, or a mode of the order engine. Needs one more thought to decide.</span></div>
+  </div>
+
+  <h2>✅ Facts — locked-in truths about this idea</h2>
+  <div class="facts">
+    <div class="item"><span>No facts pinned yet — confirmed rulings land here.</span></div>
+  </div>
+
+  <h2>❓ FAQs — the idea in plain answers</h2>
+  <div class="faqs">
+    <div class="item"><span>No FAQs yet.</span></div>
   </div>
 
   <footer>Living map — regenerated on every new thought. Source of truth: the GitHub issue behind this page.</footer>
