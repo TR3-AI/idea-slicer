@@ -2,7 +2,7 @@
   {
     "file": "memecoin-virality-trader.html",
     "title": "Memecoin virality trader",
-    "desc": "Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a chart breako",
+    "desc": "Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RS",
     "date": "2026-08-30",
     "emoji": "🪙",
     "status": "open",

@@ -204,14 +204,14 @@
 
   <header>
     <h1>Memecoin virality trader</h1>
-    <div class="sub">Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a chart breakout with divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.</div>
-    <div class="reco">8 departments, 10 sections, 7 genuine modules</div>
+    <div class="sub">Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RSI divergence — it enters with a 30% stop-loss, then exits by a fixed ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.</div>
+    <div class="reco">8 departments, 8 sections, 7 genuine modules</div>
     <div class="stamp">idea-slicer · updated 2026-08-30 · status: open · issue #4 · greenfield</div>
   </header>
 
   <h2>🧭 This idea needs — in order</h2>
   <div class="needs">
-    <span class="pill"><b>1</b>Callout intake (pump.fun / FOMO sources)</span><span class="arr">→</span><span class="pill"><b>2</b>Virality scorer (30-day baseline + age-tiered multiplier gates)</span><span class="arr">→</span><span class="pill"><b>3</b>Narrative analysis (Grok 4.6, combined score &gt; 8)</span><span class="arr">→</span><span class="pill"><b>4</b>Bundler checker (strict ≤10–15% rule)</span><span class="arr">→</span><span class="pill"><b>5</b>Signal &amp; trigger (pattern + divergence + 30% stop)</span><span class="arr">→</span><span class="pill"><b>6</b>Trade executor (Solana, sell-into-volume)</span><span class="arr">→</span><span class="pill"><b>7</b>Position manager (2x rule, moon bag, clip ladder)</span><span class="arr">→</span><span class="pill"><b>8</b>Trade journal (every gate + fill logged)</span>
+    <span class="pill"><b>1</b>Callout intake (pump.fun / FOMO sources)</span><span class="arr">→</span><span class="pill"><b>2</b>Virality scorer (30-day baseline + age-tiered multiplier gates)</span><span class="arr">→</span><span class="pill"><b>3</b>Narrative analysis (Grok 4.6, combined score &gt; 8)</span><span class="arr">→</span><span class="pill"><b>4</b>Bundler checker (strict ≤10–15% rule)</span><span class="arr">→</span><span class="pill"><b>5</b>Signal &amp; trigger (OBV/RSI divergence + 30% stop)</span><span class="arr">→</span><span class="pill"><b>6</b>Trade executor (Solana, sell-into-volume)</span><span class="arr">→</span><span class="pill"><b>7</b>Position manager (2x rule, moon bag, clip ladder)</span><span class="arr">→</span><span class="pill"><b>8</b>Trade journal (every gate + fill logged)</span>
   </div>
 
   <h2>🎬 Operating flow — how the finished system runs</h2>
@@ -229,10 +229,10 @@ flowchart TD
   F -- "✅ Pass" --> G["🧬 Bundler check:<br>% share of supply + trend (down / flat / up)"]
   G --> H{"🚫 Bundlers<br>> 10–15%?"}
   H -- "❌ Too many" --> R4["🚫 Reject — log reason"]
-  H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>pennant or descending triangle forming"]
-  I --> J{"💥 Breakout + OBV and/or RSI<br>divergence inside the pattern?"}
+  H -- "✅ Clean (lower better, 0% ideal)" --> I["📈 Watch the chart:<br>price action vs OBV and RSI"]
+  I --> J{"🔀 OBV or RSI divergence?<br>(both together = stronger signal)"}
   J -- "⏳ Not yet" --> I
-  J -- "✅ Trigger" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
+  J -- "✅ Divergence (either)" --> K["🟢 Enter the trade —<br>set 30% stop-loss immediately"]
   K --> L{"📈 Price reaches<br>2x?"}
   L -- "⏳" --> L
   L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
@@ -343,15 +343,15 @@ flowchart TD
 <div class="dept">
   <h3><span class="dicon">📈</span>Signal &amp; trigger</h3>
   <div class="chips"><span class="chip state">📝 contract required</span></div>
-  <div class="why">Watch clean candidates' charts and fire the entry only when pattern and divergence agree. One team, because the divergence check only counts inside the pattern window — shared state.</div>
+  <div class="why">Watch clean candidates' charts and fire the entry when price and oscillators disagree — divergence only; pattern detection is parked for accuracy testing.</div>
   <div class="kv"><b>Starts when:</b> the qualified-candidate contract is frozen</div>
-  <div class="kv"><b>Completes when:</b> a validated entry signal fires (pattern + breakout + divergence) or the coin dies unwatched</div>
-  <div class="kv boundary"><b>Boundary:</b> owns chart geometry and oscillators; does not own order execution</div>
+  <div class="kv"><b>Completes when:</b> a validated divergence entry signal fires (OBV or RSI, both = stronger) or the coin dies unwatched</div>
+  <div class="kv boundary"><b>Boundary:</b> owns divergence detection and the entry trigger; does not own order execution — and does not own pattern detection until it survives testing</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">pennant / descending-triangle detection</span><span class="chip">breakout watch</span><span class="chip">OBV divergence</span><span class="chip">RSI divergence</span><span class="chip">entry trigger</span><span class="chip">immediate 30% stop rule</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Setup watcher</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">chart setup detector</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">entry trigger + 30% stop</span></div></div>
+  <div class="chips"><span class="chip">OBV divergence</span><span class="chip">RSI divergence</span><span class="chip">entry trigger</span><span class="chip">immediate 30% stop rule</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Divergence watch</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">divergence detector</span><span class="mtype">project-specific</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">entry trigger + 30% stop</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Pin the contract with Bundler checker: clean-candidate payload</li><li>Detect a pennant or descending triangle (price squeezing into a tighter range); prefer descending triangle</li><li>Mark the pattern start — divergence checks only count inside this window, never far back</li><li>Wait for the breakout; on breakout, confirm OBV divergence, RSI divergence, or both inside the pattern</li><li>Fire the entry signal with an immediate 30% stop-loss attached</li></ol>
+  <ol class="steps"><li>Pin the contract with Bundler checker: clean-candidate payload</li><li>Track price against OBV (on-balance volume = running total of volume direction) and RSI (relative strength index = momentum gauge)</li><li>Entry signal: a divergence on either oscillator — price makes a new high/low and the oscillator doesn't follow; both diverging together is the stronger version but either one qualifies</li><li>Fire the entry signal with an immediate 30% stop-loss attached</li><li>While holding: keep flagging bearish divergences for the Position manager's clip strategy</li></ol>
   <div class="kv"><b>Inputs:</b> clean candidate (Bundler checker), chart data OHLC + OBV/RSI (chart provider — external)</div>
   <div class="kv"><b>Outputs:</b> trade intent (entry + 30% stop) → Trade executor; bearish divergences while holding → Position manager</div>
   <div class="lbl">Needs from</div>
@@ -393,11 +393,11 @@ flowchart TD
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Signal &amp; trigger</span></div>
 </div></div></div>
-  <div class="report">Departments: 10 candidates → 8 final (pattern + divergence merged into Signal &amp; trigger — divergence only counts inside the pattern window, shared state; Kelly sizing demoted to Unsorted, not in the authoritative flow) · Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)</div>
+  <div class="report">Departments: 10 candidates → 8 final (pattern + divergence merged into Signal &amp; trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5]) · Modules: 9 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config)</div>
 
   <h2>🧩 Genuine modules — the real building blocks</h2>
   <div class="needs modstrip">
-    <span class="pill">🧩 <span class="mname">callout listener</span> <span class="mdept">Callout intake · external-adapter</span></span><span class="pill">🧩 <span class="mname">30-day baseline calculator</span> <span class="mdept">Virality scorer · project-specific</span></span><span class="pill">🧩 <span class="mname">Grok adapter</span> <span class="mdept">Narrative analysis · external-adapter</span></span><span class="pill">🧩 <span class="mname">bundler data adapter</span> <span class="mdept">Bundler checker · external-adapter</span></span><span class="pill">🧩 <span class="mname">chart setup detector</span> <span class="mdept">Signal &amp; trigger · project-specific</span></span><span class="pill">🧩 <span class="mname">Solana execution adapter</span> <span class="mdept">Trade executor · external-adapter</span></span><span class="pill">🧩 <span class="mname">exit ladder state machine</span> <span class="mdept">Position manager · project-specific</span></span>
+    <span class="pill">🧩 <span class="mname">callout listener</span> <span class="mdept">Callout intake · external-adapter</span></span><span class="pill">🧩 <span class="mname">30-day baseline calculator</span> <span class="mdept">Virality scorer · project-specific</span></span><span class="pill">🧩 <span class="mname">Grok adapter</span> <span class="mdept">Narrative analysis · external-adapter</span></span><span class="pill">🧩 <span class="mname">bundler data adapter</span> <span class="mdept">Bundler checker · external-adapter</span></span><span class="pill">🧩 <span class="mname">divergence detector</span> <span class="mdept">Signal &amp; trigger · project-specific</span></span><span class="pill">🧩 <span class="mname">Solana execution adapter</span> <span class="mdept">Trade executor · external-adapter</span></span><span class="pill">🧩 <span class="mname">exit ladder state machine</span> <span class="mdept">Position manager · project-specific</span></span>
   </div>
 
   <h2>🔀 Integration map — who hands what to whom</h2>
@@ -417,7 +417,7 @@ flowchart TD
     B1["🔍 % share + trend"] --> B2["🚫 ≤ 10–15% rule"]
   end
   subgraph SIG["📈 5 · Signal & trigger"]
-    T1["📐 Pattern watch"] --> T2["💥 Breakout + divergence"] --> T3["🟢 Entry + 30% stop"]
+    T1["📉 Price vs OBV/RSI watch"] --> T2["🔀 Divergence confirmed"] --> T3["🟢 Entry + 30% stop"]
   end
   subgraph EXEC["⚡ 6 · Trade executor"]
     X1["💥 Entries"] --> X2["🟢 Exits into volume only"]
@@ -549,7 +549,7 @@ flowchart TD
 
   <h2>📥 Unsorted — parked, not lost</h2>
   <div class="unsorted">
-    <div class="item"><span>Remove the descending triangle from the signal</span><span class="why">it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price [#5] — arrived via GitHub, not yet sliced — run /ideaslicer to place it</span></div>
+    <div class="item"><span>Descending triangle / pennant pattern detection</span><span class="why">pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal &amp; trigger, not deleted</span></div>
 <div class="item"><span>Fractional Kelly sizing</span><span class="why">from the earlier draft of this idea, not in Bobby's new flow; keep as the sizing rule or drop it? Parked until he says</span></div>
   </div>
 
