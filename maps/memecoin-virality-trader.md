@@ -3,7 +3,7 @@ Status: open
 Updated: 2026-08-30
 Emoji: 🪙
 System: greenfield
-Recommended: 9 departments, 10 sections, 7 genuine modules
+Recommended: 9 departments, 10 sections, 8 genuine modules
 
 Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a called coin passes four gates — a tweet viral enough for its age band, a high Grok score, clean bundlers, and a clean OBV/RSI divergence — it alerts Bobby. Only when he clicks buy does the automation take over: entry with an immediate 30% stop-loss, then the fixed exit ladder. Trigger: a callout arrives. Outcome: a closed, logged trade with the initial capital secured at 2x and a manual-only moon bag left running.
 
@@ -28,11 +28,10 @@ flowchart TD
   S1 -- "✅ Within" --> S2{"⏱️ >15 one-minute<br>candles since call-out?"}
   S2 -- "❌ Stale" --> R5
   S2 -- "✅ Fresh" --> I
-  J -- "✅ Divergence (either)" --> AL["🔔 Divergence alert<br>→ front-end UI"]
-  AL --> BUY{"👆 Bobby clicks buy?<br>(the manual bit)"}
+  J -- "✅ Divergence (either)" --> AL["🔔 Divergence alert → front-end UI<br>+ 🎲 size pre-filled by fractional Kelly"]
+  AL --> BUY{"👆 Bobby clicks buy?<br>(the manual bit — one action, size already set)"}
   BUY -- "❌ Ignored" --> R6["🚫 No trade — log"]
-  BUY -- "✅ Buy clicked" --> SZ["🎲 Fractional Kelly sizes the entry<br>(safer slice of the Kelly-optimal size)"]
-  SZ --> EN["🟢 Enter — 30% stop-loss set immediately<br>🤖 automated from here on"]
+  BUY -- "✅ Buy clicked" --> EN["🟢 Enter at the pre-filled size —<br>30% stop-loss set immediately<br>🤖 automated from here on"]
   EN --> L{"📈 Price reaches<br>2x?"}
   L -- "⏳" --> L
   L -- "✅ 2x" --> M["💰 Withdraw initial capital"]
@@ -54,7 +53,7 @@ flowchart TD
 4. Bundler checker (strict ≤10–15% rule)
 5. Signal & trigger (OBV/RSI divergence + staleness guards + alert)
 6. Front-end UI (divergence alert + manual buy button)
-7. Trade executor (Solana, sell-into-volume)
+7. Trade executor (Solana + Robinhood Crypto, sell-into-volume)
 8. Position manager (fractional Kelly sizing, 2x rule, moon bag, clip ladder)
 9. Trade journal (every gate + fill logged)
 
@@ -155,29 +154,29 @@ Responsibility: Bobby's console — shows the divergence alert and turns his dec
 Starts when: Signal & trigger is emitting alerts and the executor can receive commands
 Completes when: Bobby sees a divergence alert and one tap turns it into an executed entry
 Boundary: owns display and Bobby's manual actions only; never decides anything and never touches the chain directly
-Owns: divergence alert display, manual buy button, positions + moon bag view
+Owns: divergence alert display, Kelly pre-filled size display, manual buy button, positions + moon bag view
 Inputs: divergence alerts (Signal & trigger), positions + moon bag read model (Position manager)
 Outputs: manual buy click → Position manager (sizes it before anything executes)
 Needs from: Signal & trigger, Trade executor
 Steps:
 1. Pin the contract: alert payload (coin, scores, divergence type, freshness) and buy-command shape
-2. Show the divergence alert clearly enough to decide in seconds: coin, which oscillator diverged, how fresh it is
-3. One obvious BUY button — clicking it sends the buy click to the Position manager, which sizes the entry and starts the automation
+2. Show the divergence alert clearly enough to decide in seconds: coin, which oscillator diverged, how fresh it is — and the fractional Kelly size already filled in
+3. One obvious BUY button — one click executes exactly the pre-filled size; no typing, no sizing decisions at the button
 4. Show open positions and the moon bag status from the position feed (the moon bag's manual home — see Unresolved)
 
 ### Trade executor
 Readiness: waiting-owner
 Icon: ⚡
-Responsibility: The only department that moves money — enters on Bobby's click and only his click, exits into buy pressure.
-Starts when: Bobby supplies the Solana wallet + keys (owner dependency) and the buy-command contract is frozen
+Responsibility: The only department that moves money — enters on Bobby's click and only his click, exits into buy pressure. Multi-venue: Solana (memecoins) and Robinhood Crypto Trading API (listed crypto) [#8].
+Starts when: Bobby supplies the Solana wallet + keys and the Robinhood API credentials (owner dependencies) and the buy-command contract is frozen
 Completes when: a manual buy executes with the 30% stop attached and exits fill correctly on devnet, including the sell-into-volume rule
 Boundary: owns transaction construction and fills; does not own when or why to trade
-Owns: entries (manual-triggered only), exits, sell-into-volume filter (green candle + volume only), fill reporting
-Inputs: sized entry order (Position manager), clip orders (Position manager), wallet keys (owner)
+Owns: entries (manual-triggered only), exits, venue routing (Solana vs Robinhood Crypto), sell-into-volume filter (green candle + volume only), fill reporting
+Inputs: sized entry order (Position manager), clip orders (Position manager), Solana wallet keys + Robinhood API credentials (owner)
 Outputs: fills → Position manager, Trade journal
 Needs from: Position manager
 Steps:
-1. Receive the Solana wallet + keys from Bobby (referenced by secret name, never stored raw)
+1. Receive the Solana wallet + keys and the Robinhood Crypto API credentials from Bobby (referenced by secret name, never stored raw); route each order to the venue that lists the coin
 2. Execute the entry when the sized order arrives from the Position manager — sized by fractional Kelly after Bobby's click; the alert alone never spends money
 3. Set the 30% stop-loss immediately on entry — the automation starts at this exact moment
 4. Execute exits only into buy pressure: green candles and real volume, never into red
@@ -186,17 +185,18 @@ Steps:
 ### Position manager
 Readiness: contract
 Icon: 💰
-Responsibility: Size every entry with fractional Kelly, then run the automated exit ladder from Bobby's manual entry to flat — 2x rule, moon bag, and the clip strategy. One team because sizing and the ladder share position state.
-Starts when: Bobby clicks BUY in the Front-end UI (and the Kelly inputs are supplied — see owner dependencies)
+Responsibility: Pre-fill every entry's size with fractional Kelly at alert time, then run the automated exit ladder from Bobby's manual entry to flat — 2x rule, moon bag, and the clip strategy. One team because sizing and the ladder share position state.
+Starts when: a divergence alert fires (sizing pre-fill); automation runs from Bobby's click
 Completes when: the position (moon bag aside) is flat and the result is logged
-Boundary: owns sizing and the ladder state; does not own signal detection or transaction building
-Owns: fractional Kelly sizing, 2x initial-capital recovery, 20% moon bag rule, 15–20% divergence clips, position state
+Boundary: owns sizing and the ladder state; does not own signal detection or transaction building. **The Grok score never touches size** — Grok decides *whether* we trade, Kelly decides *how much*
+Owns: fractional Kelly pre-filled sizing, 2x initial-capital recovery, 20% moon bag rule, 15–20% divergence clips, position state
 Inputs: manual buy click (Front-end UI), fills (Trade executor), bearish divergences (Signal & trigger), live price + volume (chart provider — shared foundation), Kelly inputs (owner: bankroll, win-rate + payoff estimates, chosen fraction)
 Outputs: sized entry order + clip orders → Trade executor; results → Trade journal; moon bag → Front-end UI (manual)
 Needs from: Front-end UI, Trade executor
 Steps:
 1. Pin the contracts: buy-click shape, sized entry order, fill events, clip orders
-2. On Bobby's click: size the entry with fractional Kelly (Kelly = a formula for the optimal bet fraction from win rate and odds; fractional = deliberately take only a slice of it, safer) and send the sized entry order to the executor
+2. When the alert fires: pre-compute the fractional Kelly size and attach it to the alert so the UI shows it pre-filled — Bobby never picks a number, and the Grok score is never an input to it
+3. On Bobby's click: send the entry order at exactly the pre-filled size to the executor
 3. At 2x: withdraw the initial capital — from here it is house money
 4. Set aside 20% of the remaining profit as the moon bag (never auto-sold; manual at Bobby's discretion)
 5. On each OBV/RSI divergence (ideally both): order a clip of 15–20% of the remaining 80%, routed through the executor's sell-into-volume filter
@@ -226,6 +226,7 @@ Steps:
 ## Dependency matrix
 - Bobby → Callout intake | Supplies: tracked-source list (which traders/devs) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Trade executor | Supplies: Solana wallet + keys (secret reference) | Type: owner | Blocking: yes | Mockable: yes
+- Bobby → Trade executor | Supplies: Robinhood Crypto API credentials (secret reference) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Narrative analysis | Supplies: xAI API account (grok-4.6) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Virality scorer | Supplies: X API access + multiplier tier values (3x / 10x / 50x) | Type: owner | Blocking: yes | Mockable: no
 - pump.fun / FOMO → Callout intake | Supplies: callout stream | Type: external | Blocking: yes | Mockable: yes
@@ -263,7 +264,7 @@ Steps:
 - Can start in parallel after contract definition: Signal & trigger, Position manager
 - Must perform joint design first: —
 - Must wait for another department: Front-end UI (waits on Signal & trigger + Trade executor)
-- Blocked by external or owner dependency: Trade executor (waits on Bobby's Solana wallet + keys)
+- Blocked by external or owner dependency: Trade executor (waits on Bobby's Solana wallet + keys and Robinhood API credentials)
 
 ## Structure tree
 ```
@@ -298,6 +299,7 @@ MEMECOIN VIRALITY TRADER
 ├── TRADE EXECUTOR
 │   └── On-chain execution (section)
 │       ├── Solana execution adapter (module: external-adapter)
+│       ├── Robinhood Crypto execution adapter (module: external-adapter)
 │       └── sell-into-volume filter (feature)
 ├── POSITION MANAGER
 │   ├── Entry sizing (section)
@@ -319,14 +321,9 @@ MEMECOIN VIRALITY TRADER
 - Chart data provider — external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal & trigger and Position manager
 - Tweet metric source — external choice: X API directly or a scraper (the earlier draft used ScrapingDog); pick one for the baseline engine
 - Moon bag handling — owner input: the Front-end UI is now its natural home (view + manual sell); confirm that's the plan or it stays a wallet operation
+- Robinhood venue scope — owner input [#8]: the official Robinhood API covers crypto trading only (24/7, market/limit/stop orders); there is no public stock-trading API for retail — confirm crypto-only was the intent, stocks are out unless that changes
 
 ## Unsorted
-- Position size is NOT chosen from the Grok score — it is pre-filled by fractional Kelly at alert time, so clicking buy is one action. Also: we trade not just on  [#8] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
-<<<<<<< Updated upstream
-- fractional Kelly is the sizing rule. [#7] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
-- Once the divergence alert triggers, I manually click buy from the front-end UI. From that point everything is automated: 30% stop-loss immediately, 2x trigger,  [#6] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
-=======
->>>>>>> Stashed changes
 - Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
 
 ## Raw log
@@ -338,10 +335,11 @@ MEMECOIN VIRALITY TRADER
 - Signal change [#5]: remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price divergence with OBV, RSI, or both. Entry signal: OBV or RSI chart divergence (both better, either works).
 - Manual gate + staleness guards [#6]: once the divergence alert triggers, Bobby manually clicks buy from the front-end UI; from that point everything is automated (30% stop immediately, 2x trigger, 20% moon bag untouched, 15–20% profit clips). New rules after call-out: stop tracking divergence if price rises more than 30% from the call-out (distance), or if more than 15 one-minute candles pass (time — can combine with distance).
 - Ruling [#7]: fractional Kelly is the sizing rule — graduated from Unsorted into the Position manager (Entry sizing section).
+- Ruling [#8]: position size is pre-filled by fractional Kelly at alert time, so clicking buy is one action — the Grok score never touches size (Grok decides whether, Kelly decides how much). Trade executor goes multi-venue: Solana + Robinhood Crypto Trading API (official REST API, credentials via Robinhood's API portal; crypto only — no public stock-trading API exists).
 
 ## Consolidation report
 Departments: 11 candidates → 9 final (Front-end UI added as the manual gate [#6]; pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
-Modules: 10 candidates → 7 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config; fractional Kelly calculator classified as a feature — one calculation, per the doctrine)
+Modules: 10 candidates → 8 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config; fractional Kelly calculator classified as a feature — one calculation, per the doctrine; Robinhood Crypto execution adapter added as a second venue module [#8])
 
 ## Diagram
 ```mermaid
