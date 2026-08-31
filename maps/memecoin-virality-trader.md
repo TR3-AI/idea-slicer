@@ -53,7 +53,7 @@ flowchart TD
 4. Bundler checker (strict ≤10–15% rule)
 5. Signal & trigger (OBV/RSI divergence + staleness guards + alert)
 6. Front-end UI (divergence alert + manual buy button)
-7. Trade executor (Solana + Robinhood Crypto, sell-into-volume)
+7. Trade executor (Solana + Robinhood Chain, sell-into-volume)
 8. Position manager (fractional Kelly sizing, 2x rule, moon bag, clip ladder)
 9. Trade journal (every gate + fill logged)
 
@@ -167,16 +167,16 @@ Steps:
 ### Trade executor
 Readiness: waiting-owner
 Icon: ⚡
-Responsibility: The only department that moves money — enters on Bobby's click and only his click, exits into buy pressure. Multi-venue: Solana (memecoins) and Robinhood Crypto Trading API (listed crypto) [#8].
-Starts when: Bobby supplies the Solana wallet + keys and the Robinhood API credentials (owner dependencies) and the buy-command contract is frozen
+Responsibility: The only department that moves money — enters on Bobby's click and only his click, exits into buy pressure. Multi-venue: Solana (memecoins) and the Robinhood Chain (Robinhood's Arbitrum-based EVM L2, mainnet live — tokenized stocks, perps, crypto) [#8][#9].
+Starts when: Bobby supplies the Solana wallet + keys and the Robinhood Chain EVM wallet keys (owner dependencies) and the buy-command contract is frozen
 Completes when: a manual buy executes with the 30% stop attached and exits fill correctly on devnet, including the sell-into-volume rule
 Boundary: owns transaction construction and fills; does not own when or why to trade
-Owns: entries (manual-triggered only), exits, venue routing (Solana vs Robinhood Crypto), sell-into-volume filter (green candle + volume only), fill reporting
-Inputs: sized entry order (Position manager), clip orders (Position manager), Solana wallet keys + Robinhood API credentials (owner)
+Owns: entries (manual-triggered only), exits, venue routing (Solana vs Robinhood Chain), sell-into-volume filter (green candle + volume only), fill reporting
+Inputs: sized entry order (Position manager), clip orders (Position manager), Solana wallet keys + Robinhood Chain wallet keys (owner)
 Outputs: fills → Position manager, Trade journal
 Needs from: Position manager
 Steps:
-1. Receive the Solana wallet + keys and the Robinhood Crypto API credentials from Bobby (referenced by secret name, never stored raw); route each order to the venue that lists the coin
+1. Receive the Solana wallet + keys and the Robinhood Chain EVM wallet keys from Bobby (referenced by secret name, never stored raw); route each order to the chain that lists the coin
 2. Execute the entry when the sized order arrives from the Position manager — sized by fractional Kelly after Bobby's click; the alert alone never spends money
 3. Set the 30% stop-loss immediately on entry — the automation starts at this exact moment
 4. Execute exits only into buy pressure: green candles and real volume, never into red
@@ -226,7 +226,7 @@ Steps:
 ## Dependency matrix
 - Bobby → Callout intake | Supplies: tracked-source list (which traders/devs) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Trade executor | Supplies: Solana wallet + keys (secret reference) | Type: owner | Blocking: yes | Mockable: yes
-- Bobby → Trade executor | Supplies: Robinhood Crypto API credentials (secret reference) | Type: owner | Blocking: yes | Mockable: yes
+- Bobby → Trade executor | Supplies: Robinhood Chain EVM wallet + keys (secret reference) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Narrative analysis | Supplies: xAI API account (grok-4.6) | Type: owner | Blocking: yes | Mockable: yes
 - Bobby → Virality scorer | Supplies: X API access + multiplier tier values (3x / 10x / 50x) | Type: owner | Blocking: yes | Mockable: no
 - pump.fun / FOMO → Callout intake | Supplies: callout stream | Type: external | Blocking: yes | Mockable: yes
@@ -264,7 +264,7 @@ Steps:
 - Can start in parallel after contract definition: Signal & trigger, Position manager
 - Must perform joint design first: —
 - Must wait for another department: Front-end UI (waits on Signal & trigger + Trade executor)
-- Blocked by external or owner dependency: Trade executor (waits on Bobby's Solana wallet + keys and Robinhood API credentials)
+- Blocked by external or owner dependency: Trade executor (waits on Bobby's Solana wallet + keys and Robinhood Chain wallet keys)
 
 ## Structure tree
 ```
@@ -299,7 +299,7 @@ MEMECOIN VIRALITY TRADER
 ├── TRADE EXECUTOR
 │   └── On-chain execution (section)
 │       ├── Solana execution adapter (module: external-adapter)
-│       ├── Robinhood Crypto execution adapter (module: external-adapter)
+│       ├── Robinhood Chain execution adapter (module: external-adapter, EVM)
 │       └── sell-into-volume filter (feature)
 ├── POSITION MANAGER
 │   ├── Entry sizing (section)
@@ -321,7 +321,7 @@ MEMECOIN VIRALITY TRADER
 - Chart data provider — external dependency choice (Dexscreener, Birdeye, Helius…): supplies OHLC + OBV/RSI for both Signal & trigger and Position manager
 - Tweet metric source — external choice: X API directly or a scraper (the earlier draft used ScrapingDog); pick one for the baseline engine
 - Moon bag handling — owner input: the Front-end UI is now its natural home (view + manual sell); confirm that's the plan or it stays a wallet operation
-- Robinhood venue scope — owner input [#8]: the official Robinhood API covers crypto trading only (24/7, market/limit/stop orders); there is no public stock-trading API for retail — confirm crypto-only was the intent, stocks are out unless that changes
+- Robinhood Chain scope — owner input [#9]: the chain hosts tokenized stocks, perps, and crypto — which of those does the bot trade there, and do the memecoins it watches actually list on the Robinhood Chain (or is everything Solana-only in practice)? The venue-routing rule depends on the answer
 
 ## Unsorted
 - Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
@@ -335,11 +335,12 @@ MEMECOIN VIRALITY TRADER
 - Signal change [#5]: remove the descending triangle from the signal — it needs a lot of testing, not in the main MVP until developed and tested for accuracy. Instead use chart price divergence with OBV, RSI, or both. Entry signal: OBV or RSI chart divergence (both better, either works).
 - Manual gate + staleness guards [#6]: once the divergence alert triggers, Bobby manually clicks buy from the front-end UI; from that point everything is automated (30% stop immediately, 2x trigger, 20% moon bag untouched, 15–20% profit clips). New rules after call-out: stop tracking divergence if price rises more than 30% from the call-out (distance), or if more than 15 one-minute candles pass (time — can combine with distance).
 - Ruling [#7]: fractional Kelly is the sizing rule — graduated from Unsorted into the Position manager (Entry sizing section).
-- Ruling [#8]: position size is pre-filled by fractional Kelly at alert time, so clicking buy is one action — the Grok score never touches size (Grok decides whether, Kelly decides how much). Trade executor goes multi-venue: Solana + Robinhood Crypto Trading API (official REST API, credentials via Robinhood's API portal; crypto only — no public stock-trading API exists).
+- Ruling [#8]: position size is pre-filled by fractional Kelly at alert time, so clicking buy is one action — the Grok score never touches size (Grok decides whether, Kelly decides how much). Trade executor goes multi-venue: Solana + Robinhood.
+- Correction [#9]: "Robinhood" means the Robinhood Chain — the actual blockchain (Robinhood's Arbitrum-based Ethereum L2, mainnet live since July 2026; tokenized stocks, perps, crypto, 24/7) — not the retail trading platform's Crypto Trading API. Venue #2 is an EVM chain accessed with wallet keys, same shape as Solana.
 
 ## Consolidation report
 Departments: 11 candidates → 9 final (Front-end UI added as the manual gate [#6]; pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
-Modules: 10 candidates → 8 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config; fractional Kelly calculator classified as a feature — one calculation, per the doctrine; Robinhood Crypto execution adapter added as a second venue module [#8])
+Modules: 10 candidates → 8 genuine (threshold config, moon bag vault, trend classifier demoted to feature/config; fractional Kelly calculator classified as a feature — one calculation, per the doctrine; Robinhood Chain execution adapter added as a second venue module [#8][#9])
 
 ## Diagram
 ```mermaid
