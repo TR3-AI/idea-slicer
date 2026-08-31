@@ -11,7 +11,7 @@ Watches callouts from tracked traders/devs on pump.fun and FOMO, and when a call
 ```mermaid
 flowchart TD
   A["📣 Callout arrives — tracked trader/dev calls a coin<br>on pump.fun or FOMO (web + mobile)"] --> T{"🐦 Tweet attached<br>to the coin?"}
-  T -- "❌ No tweet" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, virality score,<br>attention score via X search"]
+  T -- "❌ No tweet" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, veracity score,<br>virality (attention) score via X search"]
   T -- "✅ Yes" --> C["📊 Build 30-day baseline:<br>capture every tweet, average likes + retweets"]
   C --> D{"⏱️✖️ Tweet age × multiplier<br>in its band?"}
   D -- "❌ Fails its band" --> R1["🚫 Reject — log reason"]
@@ -101,13 +101,13 @@ Responsibility: Judge what the coin *is* and whether the attention is real — t
 Starts when: a qualified candidate arrives (tweet band passed, or no tweet at all)
 Completes when: a combined score is attached — pass at ≥ 6 with a tweet, > 8 without — or the coin is rejected with a logged reason
 Boundary: owns the Grok prompt, the five extracted scores, and the dual threshold; does not own raw tweet collection
-Owns: pre-generated prompt, narrative, thesis, sentiment, virality score, attention score, combined score, dual gate (≥ 6 with tweet · > 8 without)
+Owns: pre-generated prompt, narrative, thesis, sentiment, veracity score, virality (attention) score, combined score, dual gate (≥ 6 with tweet · > 8 without)
 Inputs: qualified candidate (Virality scorer) or no-tweet candidate (Callout intake), Grok 4.6 API (external, owner account)
 Outputs: scored candidate → Bundler checker
 Needs from: Virality scorer
 Steps:
 1. Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt
-2. Extract: narrative, thesis, sentiment, virality score (tweet vs baseline), attention score (X search across Twitter)
+2. Extract: narrative, thesis, sentiment, veracity score, virality (attention) score via X search
 3. Combine into one score
 4. Gate 3 — dual threshold: with a tweet the combined score must be ≥ 6; without a tweet it must be > 8 (a tweet's virality earns the coin slack on the score)
 
@@ -327,15 +327,15 @@ MEMECOIN VIRALITY TRADER
 - Descending triangle / pennant pattern detection — pulled from the MVP signal by Bobby [#5]: needs development + accuracy testing before it may gate entries. Parked as a future upgrade to Signal & trigger, not deleted
 
 ## Facts
-- Gate tiers — a tweet qualifies by multiplier over its 30-day baseline, by coin age: under 1h ≥3x · 1–6h ≥10x · 24h+ ≥50x. Anything outside these tiers (including 6–24h) is rejected
-- Dual score gate — with a tweet the combined Grok score must be ≥6; with no tweet it must be >8
-- It's virality, not veracity — the score gates attention, not truth
-- Bundlers — reject anything over 10–15% (below 10% preferred), especially if the share is increasing
+- Gate tiers — a tweet qualifies by multiplier over its 30-day baseline, by coin age: under 1h ≥3x · 1–6h ≥10x · 24h+ ≥50x. Anything outside these tiers (including 6–24h) is rejected [raw log]
+- Dual score gate — with a tweet the combined Grok score must be ≥6; with no tweet it must be >8 [raw log]
+- The Grok score keeps veracity and virality as separate components — veracity: is the narrative real; virality: is it getting attention [#10]
+- Bundlers — reject anything over 10–15% (below 10% preferred), especially if the share is increasing [raw log]
 - Entry signal — OBV or RSI divergence only (both = stronger); chart patterns are parked for testing [#5]
 - The buy is manual — a divergence fires an alert; nothing spends money until Bobby clicks buy; everything after the click is automated [#6]
 - Staleness guards — stop tracking a call-out if price runs +30% from it or 15 one-minute candles pass [#6]
 - Position size — fractional Kelly, pre-filled into the alert; the Grok score never touches size [#7][#8]
-- Exits — 30% stop-loss set at entry; at 2x the initial capital comes out; 20% of the rest is a manual-only moon bag; the remainder clips 15–20% per bearish divergence, sells only into green candles + real volume
+- Exits — 30% stop-loss set at entry; at 2x the initial capital comes out; 20% of the rest is a manual-only moon bag; the remainder clips 15–20% per bearish divergence, sells only into green candles + real volume [raw log]
 - Venues — Solana and the Robinhood Chain (Robinhood's Arbitrum-based EVM L2), whichever lists the coin [#8][#9]
 
 ## FAQs
@@ -345,6 +345,7 @@ MEMECOIN VIRALITY TRADER
 - What happens exactly at 2x? — The initial capital is withdrawn, the stop on it is cancelled; 20% of what remains becomes a manual-only moon bag
 - Where do the trades actually execute? — On Solana or on the Robinhood Chain (an EVM L2) — the executor routes to whichever chain lists the coin
 - Can a descending triangle or pennant trigger an entry? — Not in the MVP. Patterns are parked in Unsorted until their accuracy is tested [#5]
+- Is the Grok score about virality or veracity? — Both, as separate components: veracity judges whether the narrative holds up, virality measures attention. The earlier "virality, not veracity" note renamed the attention component — it never dropped veracity [#10]
 
 ## Raw log
 - Full workflow, end to end. Call out from a vetted source → tweet 30-day baseline + virality multiplier → Grok combined score (6.5+ with tweet, 8+ without) → watch: holder quality (bundlers, snipers, reduction trend), age-based chart → setup: descending triangle or pennant, pattern start, breakout → two-leg divergence inside pattern (pivots, price vs OBV/RSI) → entry, fractional Kelly, 30% stop → 2X recover initial, cancel stop → 15% sells per bearish divergence → moon bag manual
@@ -357,6 +358,7 @@ MEMECOIN VIRALITY TRADER
 - Ruling [#7]: fractional Kelly is the sizing rule — graduated from Unsorted into the Position manager (Entry sizing section).
 - Ruling [#8]: position size is pre-filled by fractional Kelly at alert time, so clicking buy is one action — the Grok score never touches size (Grok decides whether, Kelly decides how much). Trade executor goes multi-venue: Solana + Robinhood.
 - Correction [#9]: "Robinhood" means the Robinhood Chain — the actual blockchain (Robinhood's Arbitrum-based Ethereum L2, mainnet live since July 2026; tokenized stocks, perps, crypto, 24/7) — not the retail trading platform's Crypto Trading API. Venue #2 is an EVM chain accessed with wallet keys, same shape as Solana.
+- Ruling [#10]: veracity and virality are both kept, as separate components of the Grok combined score — veracity = is the narrative real, virality = is it getting attention. The earlier correction ("it's virality, not veracity") renamed the attention component; it did not drop veracity.
 
 ## Consolidation report
 Departments: 11 candidates → 9 final (Front-end UI added as the manual gate [#6]; pattern + divergence merged into Signal & trigger — shared chart state; pattern detection later pulled from the MVP and parked for testing [#5])
