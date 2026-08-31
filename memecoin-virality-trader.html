@@ -231,7 +231,7 @@
     <pre class="mermaid">
 flowchart TD
   A["📣 Callout arrives — tracked trader/dev calls a coin<br>on pump.fun or FOMO (web + mobile)"] --> T{"🐦 Tweet attached<br>to the coin?"}
-  T -- "❌ No tweet" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, virality score,<br>attention score via X search"]
+  T -- "❌ No tweet" --> E["🧠 Grok 4.6 analysis (pre-generated prompt):<br>narrative, thesis, sentiment, veracity score,<br>virality (attention) score via X search"]
   T -- "✅ Yes" --> C["📊 Build 30-day baseline:<br>capture every tweet, average likes + retweets"]
   C --> D{"⏱️✖️ Tweet age × multiplier<br>in its band?"}
   D -- "❌ Fails its band" --> R1["🚫 Reject — log reason"]
@@ -313,10 +313,10 @@ flowchart TD
   <div class="kv"><b>Completes when:</b> a combined score is attached — pass at ≥ 6 with a tweet, &gt; 8 without — or the coin is rejected with a logged reason</div>
   <div class="kv boundary"><b>Boundary:</b> owns the Grok prompt, the five extracted scores, and the dual threshold; does not own raw tweet collection</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">pre-generated prompt</span><span class="chip">narrative</span><span class="chip">thesis</span><span class="chip">sentiment</span><span class="chip">virality score</span><span class="chip">attention score</span><span class="chip">combined score</span><span class="chip">dual gate (≥ 6 with tweet · &gt; 8 without)</span></div>
+  <div class="chips"><span class="chip">pre-generated prompt</span><span class="chip">narrative</span><span class="chip">thesis</span><span class="chip">sentiment</span><span class="chip">veracity score</span><span class="chip">virality (attention) score</span><span class="chip">combined score</span><span class="chip">dual gate (≥ 6 with tweet · &gt; 8 without)</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Grok scoring</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">Grok adapter</span><span class="mtype">external-adapter</span></div><div class="sline feat d2"><span class="sic">🔹</span><span class="sname">score combiner</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt</li><li>Extract: narrative, thesis, sentiment, virality score (tweet vs baseline), attention score (X search across Twitter)</li><li>Combine into one score</li><li>Gate 3 — dual threshold: with a tweet the combined score must be ≥ 6; without a tweet it must be &gt; 8 (a tweet's virality earns the coin slack on the score)</li></ol>
+  <ol class="steps"><li>Feed candidate data into Grok 4.6 (grok-4.6 on the xAI API) with the pre-generated prompt</li><li>Extract: narrative, thesis, sentiment, veracity score, virality (attention) score via X search</li><li>Combine into one score</li><li>Gate 3 — dual threshold: with a tweet the combined score must be ≥ 6; without a tweet it must be &gt; 8 (a tweet's virality earns the coin slack on the score)</li></ol>
   <div class="kv"><b>Inputs:</b> qualified candidate (Virality scorer) or no-tweet candidate (Callout intake), Grok 4.6 API (external, owner account)</div>
   <div class="kv"><b>Outputs:</b> scored candidate → Bundler checker</div>
   <div class="lbl">Needs from</div>
@@ -618,15 +618,15 @@ flowchart TD
 
   <h2>✅ Facts — locked-in truths about this idea</h2>
   <div class="facts">
-    <div class="item"><span>Gate tiers</span><span class="why">a tweet qualifies by multiplier over its 30-day baseline, by coin age: under 1h ≥3x · 1–6h ≥10x · 24h+ ≥50x. Anything outside these tiers (including 6–24h) is rejected</span></div>
-<div class="item"><span>Dual score gate</span><span class="why">with a tweet the combined Grok score must be ≥6; with no tweet it must be &gt;8</span></div>
-<div class="item"><span>It's virality, not veracity</span><span class="why">the score gates attention, not truth</span></div>
-<div class="item"><span>Bundlers</span><span class="why">reject anything over 10–15% (below 10% preferred), especially if the share is increasing</span></div>
+    <div class="item"><span>Gate tiers</span><span class="why">a tweet qualifies by multiplier over its 30-day baseline, by coin age: under 1h ≥3x · 1–6h ≥10x · 24h+ ≥50x. Anything outside these tiers (including 6–24h) is rejected [raw log]</span></div>
+<div class="item"><span>Dual score gate</span><span class="why">with a tweet the combined Grok score must be ≥6; with no tweet it must be &gt;8 [raw log]</span></div>
+<div class="item"><span>The Grok score keeps veracity and virality as separate components</span><span class="why">veracity: is the narrative real; virality: is it getting attention [#10]</span></div>
+<div class="item"><span>Bundlers</span><span class="why">reject anything over 10–15% (below 10% preferred), especially if the share is increasing [raw log]</span></div>
 <div class="item"><span>Entry signal</span><span class="why">OBV or RSI divergence only (both = stronger); chart patterns are parked for testing [#5]</span></div>
 <div class="item"><span>The buy is manual</span><span class="why">a divergence fires an alert; nothing spends money until Bobby clicks buy; everything after the click is automated [#6]</span></div>
 <div class="item"><span>Staleness guards</span><span class="why">stop tracking a call-out if price runs +30% from it or 15 one-minute candles pass [#6]</span></div>
 <div class="item"><span>Position size</span><span class="why">fractional Kelly, pre-filled into the alert; the Grok score never touches size [#7][#8]</span></div>
-<div class="item"><span>Exits</span><span class="why">30% stop-loss set at entry; at 2x the initial capital comes out; 20% of the rest is a manual-only moon bag; the remainder clips 15–20% per bearish divergence, sells only into green candles + real volume</span></div>
+<div class="item"><span>Exits</span><span class="why">30% stop-loss set at entry; at 2x the initial capital comes out; 20% of the rest is a manual-only moon bag; the remainder clips 15–20% per bearish divergence, sells only into green candles + real volume [raw log]</span></div>
 <div class="item"><span>Venues</span><span class="why">Solana and the Robinhood Chain (Robinhood's Arbitrum-based EVM L2), whichever lists the coin [#8][#9]</span></div>
   </div>
 
@@ -638,6 +638,7 @@ flowchart TD
 <div class="item"><span>What happens exactly at 2x?</span><span class="why">The initial capital is withdrawn, the stop on it is cancelled; 20% of what remains becomes a manual-only moon bag</span></div>
 <div class="item"><span>Where do the trades actually execute?</span><span class="why">On Solana or on the Robinhood Chain (an EVM L2) — the executor routes to whichever chain lists the coin</span></div>
 <div class="item"><span>Can a descending triangle or pennant trigger an entry?</span><span class="why">Not in the MVP. Patterns are parked in Unsorted until their accuracy is tested [#5]</span></div>
+<div class="item"><span>Is the Grok score about virality or veracity?</span><span class="why">Both, as separate components: veracity judges whether the narrative holds up, virality measures attention. The earlier &quot;virality, not veracity&quot; note renamed the attention component — it never dropped veracity [#10]</span></div>
   </div>
 
   <footer>Living map — regenerated on every new thought. Source of truth: the GitHub issue behind this page.</footer>
