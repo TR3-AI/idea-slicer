@@ -216,26 +216,28 @@
 
   <header>
     <h1>Production user testing</h1>
-    <div class="sub">A per-phase production gate: when a phase's feature tickets and PRs land, a tester agent drives the live front end exactly like a user — inside a ProofShot recording — against a test list the manager wrote, ticks what works, logs what breaks, and loops fixes back to the feature agent until recorded proof says the phase is release-ready. Applies to everything being built now or in the future, not just trading features.</div>
-    <div class="reco">5 departments, 2 sections, 2 genuine modules</div>
+    <div class="sub">A per-phase production gate: when a phase's feature tickets and PRs land, a tester agent drives the live front end exactly like a user — inside a ProofShot recording — against a test list the manager wrote, ticks what works, logs what breaks, and loops fixes back to the feature agent until recorded proof says the phase is release-ready. A linked repository feeds it: the system reads the code, prepares the feature list, watches feature branches, and marks finished code &quot;ready to be tested&quot;. Applies to everything being built now or in the future, not just trading features.</div>
+    <div class="reco">6 departments, 4 sections, 3 genuine modules</div>
     <div class="stamp">idea-slicer · updated 2026-09-01 · status: open · issue #11 · existing</div>
   </header>
 
   <h2>🧭 This idea needs — in order</h2>
   <div class="needs">
-    <span class="pill"><b>1</b>A tester agent that drives the real front end like a user — never Bobby.</span><span class="arr">→</span><span class="pill"><b>2</b>A recordable, robust browser substrate (herdr in-app browser vs external Chrome).</span><span class="arr">→</span><span class="pill"><b>3</b>ProofShot recording of every run.</span><span class="arr">→</span><span class="pill"><b>4</b>A manager-written test brief per phase — specific cases, expected behaviour, look-fors.</span><span class="arr">→</span><span class="pill"><b>5</b>Per-case success ticks and bug logs with timestamps and context.</span><span class="arr">→</span><span class="pill"><b>6</b>A fix-and-retest loop routing evidence back to the feature-ticket agent.</span><span class="arr">→</span><span class="pill"><b>7</b>A per-phase advance gate — testing never waits for project end.</span><span class="arr">→</span><span class="pill"><b>8</b>A computer-use-strong driving model (GPT 5.6 cited as the benchmark leader).</span>
+    <span class="pill"><b>1</b>A tester agent that drives the real front end like a user — never Bobby.</span><span class="arr">→</span><span class="pill"><b>2</b>A recordable, robust browser substrate (herdr in-app browser vs external Chrome).</span><span class="arr">→</span><span class="pill"><b>3</b>ProofShot recording of every run.</span><span class="arr">→</span><span class="pill"><b>4</b>A manager-written test brief per phase — specific cases, expected behaviour, look-fors.</span><span class="arr">→</span><span class="pill"><b>5</b>Per-case success ticks and bug logs with timestamps and context.</span><span class="arr">→</span><span class="pill"><b>6</b>A fix-and-retest loop routing evidence back to the feature-ticket agent.</span><span class="arr">→</span><span class="pill"><b>7</b>A per-phase advance gate — testing never waits for project end.</span><span class="arr">→</span><span class="pill"><b>8</b>A computer-use-strong driving model (GPT 5.6 cited as the benchmark leader).</span><span class="arr">→</span><span class="pill"><b>9</b>A repository link: read the code, prepare the feature list from it, watch feature branches, and mark finished features &quot;ready to be tested&quot;.</span>
   </div>
 
   <h2>🎬 Operating flow — how the finished system runs</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
-  A["Phase complete: all feature tickets + PRs merged (5 tickets per PR, 5/5 on staging/grepile)"] --> B["Manager compiles the test brief: how it should work, expected front-end behaviour, cases + look-fors"]
-  B --> C["Tester agent drives the live front end like a user, inside a ProofShot recording"]
+  R["Repo linked: read code, prepare feature list,<br>watch feature branches"] --> RT["Finished feature marked<br>ready to be tested"]
+  RT --> A["Phase complete: all feature tickets + PRs merged<br>(5 tickets per PR, 5/5 on staging/grepile)"]
+  A --> B["Manager compiles the test brief: how it should work,<br>expected front-end behaviour, cases + look-fors"]
+  B --> C["Tester agent drives the live front end like a user,<br>inside a ProofShot recording"]
   C --> D{"Every case green?"}
-  D -- "no — bug logged with timestamp + context" --> E["Recording + logs routed to the agent that wrote the feature ticket"]
+  D -- "no — bug logged with timestamp + context" --> E["Recording + logs routed to<br>the agent that wrote the feature ticket"]
   E --> F["Fix applied"] --> C
-  D -- "yes — every success ticked on video" --> G["Phase verdict: release-ready — real money + API keys can be trusted"]
+  D -- "yes — every success ticked on video" --> G["Phase verdict: release-ready —<br>real money + API keys can be trusted"]
   G --> H["Next phase starts"]
     </pre>
   </div>
@@ -246,18 +248,18 @@ flowchart TD
   <h3><span class="dicon">📋</span>Test brief compiler</h3>
   <div class="chips"><span class="chip state">✅ ready</span></div>
   <div class="why">turn a completed phase's feature tickets into the exact test brief the tester executes — for every case: how it should work, how the written code should behave in the front end, what to test, and what to look for.</div>
-  <div class="kv"><b>Starts when:</b> a phase closes (all feature tickets + PRs merged, 5/5 on staging/grepile).</div>
+  <div class="kv"><b>Starts when:</b> a phase closes (all feature tickets + PRs merged, 5/5 on staging/grepile) or the codebase link marks features ready.</div>
   <div class="kv"><b>Completes when:</b> the tester agent holds a brief it can execute case by case with no ambiguity.</div>
   <div class="kv boundary"><b>Boundary:</b> owns test content; does not own executing tests or fixing code.</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">&quot;the manager should give the tester a specific list of what needs to be tested&quot;</span><span class="chip">the three briefing points (how should it work · expected front-end behaviour · what to test and watch for)</span><span class="chip">example cases (is the limit chaser working · higher/lower limits · cutting off</span><span class="chip">chasing</span><span class="chip">cancelling).</span></div>
-  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Ticket intake (feature: reads the phase's tickets/PRs)</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Behaviour derivation (feature: user-visible behaviours from the code)</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Brief writer (feature: cases + expected results + look-fors)</span></div></div>
+  <div class="chips"><span class="chip">&quot;the manager should give the tester a specific list of what needs to be tested&quot;</span><span class="chip">the three briefing points (how should it work · expected front-end behaviour · what to test and watch for)</span><span class="chip">example cases (is the limit chaser working · higher/lower limits · cutting off</span><span class="chip">chasing</span><span class="chip">cancelling)</span><span class="chip">external pattern research — &quot;search external</span><span class="chip">high-ranking sources to see how the feature works in practice; finding the best implementation patterns helps it understand the testing stream of that particular feature&quot;.</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Ticket intake (feature: reads the phase's tickets/PRs + ready-to-test notes)</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Pattern research (feature: high-ranking external sources → implementation patterns)</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Behaviour derivation (feature: user-visible behaviours from the code)</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Brief writer (feature: cases + expected results + look-fors)</span></div></div>
   <div class="lbl">Steps</div>
-  <ol class="steps"><li>Collect the phase's feature tickets and PRs.</li><li>Derive the user-visible behaviours each ticket implies.</li><li>Write every case with its expected result and its look-fors.</li><li>Hand the brief to the tester agent run.</li></ol>
-  <div class="kv"><b>Inputs:</b> the phase's feature tickets and merged PRs.</div>
+  <ol class="steps"><li>Collect the phase's feature tickets and PRs (and the codebase link's notes, when present).</li><li>Research how the feature works in practice from high-ranking external sources — best implementation patterns sharpen the test stream.</li><li>Derive the user-visible behaviours each ticket implies.</li><li>Write every case with its expected result and its look-fors.</li><li>Hand the brief to the tester agent run.</li></ol>
+  <div class="kv"><b>Inputs:</b> the phase's feature tickets and merged PRs; the codebase link's feature list + ready-to-test notes; external implementation-pattern research.</div>
   <div class="kv"><b>Outputs:</b> the phase test brief → Tester agent run.</div>
   <div class="lbl">Needs from</div>
-  <div class="chips"><span class="chip dep">nothing (reads the ticket pipeline's output).</span></div>
+  <div class="chips"><span class="chip dep">Codebase link (repo-derived features</span><span class="chip dep">when a repo is linked).</span></div>
 </div>
 
 <div class="dept">
@@ -276,6 +278,24 @@ flowchart TD
   <div class="kv"><b>Outputs:</b> re-test requests → Tester agent run; cleared cases → Phase release gate.</div>
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">Tester agent run (failures).</span></div>
+</div></div></div>
+<div class="bucket"><div class="bucket-head b-after-contract">📝 Can start in parallel after contract definition</div><div class="grid">
+<div class="dept">
+  <h3><span class="dicon">🔗</span>Codebase link</h3>
+  <div class="chips"><span class="chip state">📝 contract required</span></div>
+  <div class="why">connect the team's repository to the testing system — ingest the code and prepare the feature list from it, watch feature branches for new code, inspect each change in real time to understand what the feature is and how to test it, and mark every finished feature &quot;ready to be tested&quot;.</div>
+  <div class="kv"><b>Starts when:</b> Bobby links a repository.</div>
+  <div class="kv"><b>Completes when:</b> every completed feature in the repo carries a current &quot;ready to be tested&quot; note the manager can pick up.</div>
+  <div class="kv boundary"><b>Boundary:</b> owns code intake and change detection; does not own writing the test brief, running tests, or the phase verdict.</div>
+  <div class="lbl">Owns</div>
+  <div class="chips"><span class="chip">&quot;if I add the repository to it</span><span class="chip">it should pick up the code&quot;</span><span class="chip">&quot;read the code and prepare a feature list from it&quot; (an additional input alongside PRDs</span><span class="chip">SDDs</span><span class="chip">plans</span><span class="chip">or future tickets — added together or individually)</span><span class="chip">&quot;detect new code on a specific feature branch</span><span class="chip">inspect the codebase</span><span class="chip">run through it in real time to understand exactly what the feature is and how to test it&quot;</span><span class="chip">&quot;add a 'ready to be tested' note once finished&quot;.</span></div>
+  <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Repo intake (section: ingest code → feature list)</span></div><div class="sline mod d2"><span class="sic">🧩</span><span class="sname">GitHub adapter</span><span class="mtype">external-adapter</span></div><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Branch watch (section: detect → inspect → ready-to-test note)</span></div></div>
+  <div class="lbl">Steps</div>
+  <ol class="steps"><li>Ingest the repository on link and prepare the feature list from the code.</li><li>Watch feature branches for new code.</li><li>Inspect each change in real time — what the feature is and how to test it.</li><li>Mark the finished feature &quot;ready to be tested&quot;.</li></ol>
+  <div class="kv"><b>Inputs:</b> the repository (GitHub), branch naming conventions.</div>
+  <div class="kv"><b>Outputs:</b> the repo feature list + ready-to-test notes → Test brief compiler / the manager.</div>
+  <div class="lbl">Needs from</div>
+  <div class="chips"><span class="chip dep">nothing (Bobby supplies the repo link).</span></div>
 </div></div></div>
 <div class="bucket"><div class="bucket-head b-joint-design">🤝 Must perform joint design first</div><div class="grid">
 <div class="dept">
@@ -304,7 +324,7 @@ flowchart TD
   <div class="kv"><b>Completes when:</b> the phase verdict is issued — advance (proof recorded) or hold (cases open).</div>
   <div class="kv boundary"><b>Boundary:</b> owns the advance/hold decision; does not own testing or fixing.</div>
   <div class="lbl">Owns</div>
-  <div class="chips"><span class="chip">&quot;production-level testing to determine whether a feature is genuinely ready to release and whether real money and API keys can be trusted with it&quot;</span><span class="chip">&quot;per phase rather than waiting until the entire project is finished</span><span class="chip">preventing building on a bloated codebase only to discover deep architectural flaws later&quot;.</span></div>
+  <div class="chips"><span class="chip">&quot;production-level testing to determine whether a feature is genuinely ready to release and whether real money and API keys can be trusted with it&quot;</span><span class="chip">&quot;per phase rather than waiting until the entire project is finished</span><span class="chip">preventing building on a bloated codebase only to discover deep architectural flaws later&quot;</span><span class="chip">&quot;small feature tests that we can qualify as done</span><span class="chip">tested</span><span class="chip">and workable — later they come together to make the project</span><span class="chip">or a phase in the project&quot;.</span></div>
   <div class="lbl">Structure</div><div class="sblock"><div class="sline sec d1"><span class="sic">📁</span><span class="sname">Verdict issuer (feature: advance/hold on recorded proof)</span></div></div>
   <div class="lbl">Steps</div>
   <ol class="steps"><li>Require the all-green recorded run for the phase.</li><li>Issue advance or hold.</li><li>On hold, point at the open cases blocking it.</li></ol>
@@ -331,19 +351,22 @@ flowchart TD
   <div class="lbl">Needs from</div>
   <div class="chips"><span class="chip dep">every other department (it packages the proven flow).</span></div>
 </div></div></div>
-  <div class="report">Departments: 6 candidates → 5 final · Modules: 2 candidates → 2 genuine</div>
+  <div class="report">Departments: 7 candidates → 6 final · Modules: 3 candidates → 3 genuine</div>
 
   <h2>🧩 Genuine modules — the real building blocks</h2>
   <div class="needs modstrip">
-    <span class="pill">🧩 <span class="mname">ProofShot recorder</span> <span class="mdept">Tester agent run · external-adapter</span></span>
+    <span class="pill">🧩 <span class="mname">GitHub adapter</span> <span class="mdept">Codebase link · external-adapter</span></span><span class="pill">🧩 <span class="mname">ProofShot recorder</span> <span class="mdept">Tester agent run · external-adapter</span></span>
   </div>
 
   <h2>🔀 Integration map — who hands what to whom</h2>
   <div class="diagram">
     <pre class="mermaid">
 flowchart TD
+  subgraph LINK["🔗 Codebase link"]
+    K1["ingest repo → feature list"] --> K2["watch feature branches"] --> K3["mark ready to be tested"]
+  end
   subgraph BRIEF["📋 Test brief compiler"]
-    B1["read phase tickets"] --> B2["derive user-visible behaviours"] --> B3["write cases + look-fors"]
+    B1["read tickets + ready-to-test notes"] --> B2["research implementation patterns"] --> B3["derive behaviours"] --> B4["write cases + look-fors"]
   end
   subgraph RUN["🤖 Tester agent run"]
     R1["drive live front end"] --> R2["ProofShot records every step"] --> R3["tick successes, log bugs with context"]
@@ -358,6 +381,7 @@ flowchart TD
   subgraph PACK["📦 Capability packaging"]
     P1["skill vs tie-in"] --> P2["model + browser substrate"]
   end
+  LINK --> BRIEF
   BRIEF --> RUN
   RUN --> LOOP
   LOOP --> RUN
@@ -368,6 +392,13 @@ flowchart TD
 
   <h2>🤝 Correlated parallel groups</h2>
   
+<div class="group">
+  <h4>Code-to-brief <span class="snap s4">4</span></h4>
+  <div class="members">👥 Codebase link + Test brief compiler · <b>frozen-contract</b></div>
+  <div class="kv"><b>Contract:</b> the ready-to-test note format (feature id · what it is · how to test it · code references)</div>
+  <div class="kv"><b>Main risk:</b> code detection misreads the feature → the brief tests the wrong thing.</div>
+</div>
+
 <div class="group">
   <h4>Testing core <span class="snap s4">4</span></h4>
   <div class="members">👥 Test brief compiler + Tester agent run + Fix-and-retest loop · <b>frozen-contract</b></div>
@@ -384,7 +415,10 @@ flowchart TD
 
   <h2>🔗 Dependency matrix</h2>
   <div class="depswrap">
-    <table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr><tr><td class="who">Test brief compiler</td><td class="who">Tester agent run</td><td>phase test brief</td><td><span class="ttag t-hard-internal">hard-internal</span></td><td class="yes">yes</td><td class="">yes (sample brief)</td></tr>
+    <table class="deps"><tr><th>Producer</th><th>Consumer</th><th>Supplies</th><th>Type</th><th>Blocking</th><th>Mockable</th></tr><tr><td class="who">Codebase link</td><td class="who">Test brief compiler</td><td>repo feature list + ready-to-test notes + code understanding</td><td><span class="ttag t-hard-internal">hard-internal</span></td><td class="no">yes (when a repo is linked)</td><td class="">yes (sample notes)</td></tr>
+<tr><td class="who">GitHub</td><td class="who">Codebase link</td><td>repo access + branch events</td><td><span class="ttag t-external">external</span></td><td class="yes">yes</td><td class="">no</td></tr>
+<tr><td class="who">Bobby</td><td class="who">Codebase link</td><td>the repository link + branch conventions</td><td><span class="ttag t-owner">owner</span></td><td class="yes">yes</td><td class="">no</td></tr>
+<tr><td class="who">Test brief compiler</td><td class="who">Tester agent run</td><td>phase test brief</td><td><span class="ttag t-hard-internal">hard-internal</span></td><td class="yes">yes</td><td class="">yes (sample brief)</td></tr>
 <tr><td class="who">Tester agent run</td><td class="who">Fix-and-retest loop</td><td>failure logs + recording</td><td><span class="ttag t-soft-internal">soft-internal</span></td><td class="no">no</td><td class="">yes (sample logs)</td></tr>
 <tr><td class="who">Tester agent run</td><td class="who">Phase release gate</td><td>recorded all-green proof</td><td><span class="ttag t-hard-internal">hard-internal</span></td><td class="yes">yes</td><td class="no">yes</td></tr>
 <tr><td class="who">Fix-and-retest loop</td><td class="who">Tester agent run</td><td>re-test requests after fixes</td><td><span class="ttag t-runtime">runtime</span></td><td class="no">no</td><td class="no">yes</td></tr>
@@ -422,8 +456,14 @@ flowchart TD
 </div>
 
 <div class="snaprow">
+  <div class="snapscore"><span class="snap s4">4</span><span class="meter m4">●●●●○</span><span class="slabel">Strong fit</span></div>
+  <div class="smain"><span class="conn">4. Codebase link → Test brief compiler</span><span class="swhy">notes are a document the compiler consumes</span></div>
+  <div class="swork"><b>needs</b>ready-to-test note format must be frozen.</div>
+</div>
+
+<div class="snaprow">
   <div class="snapscore"><span class="snap s3">3</span><span class="meter m3">●●●○○</span><span class="slabel">Moderate fit</span></div>
-  <div class="smain"><span class="conn">4. Capability packaging ↔ Tester agent run</span><span class="swhy">the substrate choice shapes the harness</span></div>
+  <div class="smain"><span class="conn">5. Capability packaging ↔ Tester agent run</span><span class="swhy">the substrate choice shapes the harness</span></div>
   <div class="swork"><b>needs</b>one joint-design session.</div>
 </div>
 
@@ -433,12 +473,13 @@ flowchart TD
 <div class="item"><span>Driving model</span><span class="why">GPT 5.6 cited as the computer-use benchmark leader and solid with the in-app browser, but its strength outside that is unverified; the choice shapes the tester harness.</span></div>
 <div class="item"><span>Browser substrate</span><span class="why">herdr in-app browser vs external Chrome; whichever is picked must stay recordable and robust (errors, bugs, logs, successes tracked).</span></div>
 <div class="item"><span>Dedicated testing agent vs the manager seat running tests itself</span><span class="why">Bobby's workflow says &quot;if using a dedicated testing agent&quot;, so team topology per project stays open.</span></div>
+<div class="item"><span>Code graph vs direct code reading for the codebase link</span><span class="why">&quot;would we use a code graph for that, or would it just read the code directly?&quot;; changes the department's internal design and how much infrastructure it needs.</span></div>
+<div class="item"><span>Which external sources count as &quot;high-ranking&quot; for implementation-pattern research</span><span class="why">changes what the brief compiler trusts.</span></div>
   </div>
 
   <h2>📥 Unsorted — parked, not lost</h2>
   <div class="unsorted">
-    <div class="item"><span>Also, if I update anything or have a new input to an idea (an idea slicer), does it immediately pick up if it can turn into a feature and then add it to the fea [#12]</span><span class="why">arrived via GitHub, not yet sliced — run /ideaslicer to place it</span></div>
-<div class="item"><span>—</span></div>
+    <div class="item"><span>—</span></div>
   </div>
 
   <h2>✅ Facts — locked-in truths about this idea</h2>
@@ -454,6 +495,10 @@ flowchart TD
 <div class="item"><span>This is production-level testing: it decides whether a feature is genuinely ready to release and whether real money and API keys can be trusted with it. [raw log]</span></div>
 <div class="item"><span>Scope is everything being built now or in the future; trading features (limit chaser, dynamic stop-loss with TP) are examples, not the scope. [raw log]</span></div>
 <div class="item"><span>The substrate must be recordable and must track errors, bugs, logs, and successes. [raw log]</span></div>
+<div class="item"><span>The repository is an additional input alongside PRDs, SDDs, plans, or future tickets</span><span class="why">&quot;which could be added together or individually&quot; — and it should read the code and prepare a feature list from it. [#12]</span></div>
+<div class="item"><span>On a linked repo, the system detects new code on a specific feature branch, inspects the codebase in real time to understand exactly what the feature is and how to test it, then adds a &quot;ready to be tested&quot; note once finished. [#12]</span></div>
+<div class="item"><span>A research step should &quot;search external, high-ranking sources to see how the feature works in practice</span><span class="why">finding the best implementation patterns would help it understand the testing stream of that particular feature&quot;. [#12]</span></div>
+<div class="item"><span>The end shape is &quot;small feature tests that we can qualify as done, tested, and workable</span><span class="why">later on, all of those come together to make the project, or to make a phase in the project&quot;. [#12]</span></div>
   </div>
 
   <h2>❓ FAQs — the idea in plain answers</h2>
@@ -463,6 +508,8 @@ flowchart TD
 <div class="item"><span>**Who does the clicking?** The tester agent, never Bobby. Bobby watches the recording.</span></div>
 <div class="item"><span>**What makes a phase &quot;done&quot;?** Recorded video proof that every case in the manager's brief passed on the live front end. A reported &quot;done&quot; is not accepted.</span></div>
 <div class="item"><span>**Why per phase?** So deep architectural flaws surface before the next phase is built on top of them.</span></div>
+<div class="item"><span>**Does the repository input replace PRDs and SDDs?** No</span><span class="why">the repo is an additional input alongside them. Documents say what was intended; the code says what actually exists. Together or individually, both feed the feature list.</span></div>
+<div class="item"><span>**When does automatic testing start?** Once the codebase link marks a feature &quot;ready to be tested&quot;</span><span class="why">after it has read the new code on the feature branch and worked out what the feature is and how to test it.</span></div>
   </div>
 
   <footer>Living map — regenerated on every new thought. Source of truth: the GitHub issue behind this page.</footer>
@@ -490,7 +537,7 @@ flowchart TD
     }
   });
 </script>
-<script id="graph-data" type="application/json">{"nodes":[{"id":"Test brief compiler","kind":"dept"},{"id":"Tester agent run","kind":"dept"},{"id":"Fix-and-retest loop","kind":"dept"},{"id":"Phase release gate","kind":"dept"},{"id":"team pipeline","kind":"external"},{"id":"Feature-ticket pipeline","kind":"external"},{"id":"ProofShot (GitHub repo)","kind":"external"},{"id":"herdr in-app browser","kind":"external"},{"id":"Bobby (model + form rulings)","kind":"external"},{"id":"Capability packaging","kind":"dept"}],"links":[{"source":"Test brief compiler","target":"Tester agent run","type":"hard-internal","blocking":"yes","mockable":"yes (sample brief)"},{"source":"Tester agent run","target":"Fix-and-retest loop","type":"soft-internal","blocking":"no","mockable":"yes (sample logs)"},{"source":"Tester agent run","target":"Phase release gate","type":"hard-internal","blocking":"yes","mockable":"yes"},{"source":"Fix-and-retest loop","target":"Tester agent run","type":"runtime","blocking":"no","mockable":"yes"},{"source":"Phase release gate","target":"team pipeline","type":"runtime","blocking":"yes","mockable":"no"},{"source":"Feature-ticket pipeline","target":"Test brief compiler","type":"runtime","blocking":"yes","mockable":"yes"},{"source":"ProofShot (GitHub repo)","target":"Tester agent run","type":"external","blocking":"yes","mockable":"no"},{"source":"herdr in-app browser","target":"Tester agent run","type":"external","blocking":"no (external Chrome is the fallback)","mockable":"no"},{"source":"Bobby (model + form rulings)","target":"Capability packaging","type":"owner","blocking":"yes","mockable":"no"}]}</script>
+<script id="graph-data" type="application/json">{"nodes":[{"id":"Codebase link","kind":"dept"},{"id":"Test brief compiler","kind":"dept"},{"id":"GitHub","kind":"external"},{"id":"Bobby","kind":"owner"},{"id":"Tester agent run","kind":"dept"},{"id":"Fix-and-retest loop","kind":"dept"},{"id":"Phase release gate","kind":"dept"},{"id":"team pipeline","kind":"external"},{"id":"Feature-ticket pipeline","kind":"external"},{"id":"ProofShot (GitHub repo)","kind":"external"},{"id":"herdr in-app browser","kind":"external"},{"id":"Bobby (model + form rulings)","kind":"external"},{"id":"Capability packaging","kind":"dept"}],"links":[{"source":"Codebase link","target":"Test brief compiler","type":"hard-internal","blocking":"yes (when a repo is linked)","mockable":"yes (sample notes)"},{"source":"GitHub","target":"Codebase link","type":"external","blocking":"yes","mockable":"no"},{"source":"Bobby","target":"Codebase link","type":"owner","blocking":"yes","mockable":"no"},{"source":"Test brief compiler","target":"Tester agent run","type":"hard-internal","blocking":"yes","mockable":"yes (sample brief)"},{"source":"Tester agent run","target":"Fix-and-retest loop","type":"soft-internal","blocking":"no","mockable":"yes (sample logs)"},{"source":"Tester agent run","target":"Phase release gate","type":"hard-internal","blocking":"yes","mockable":"yes"},{"source":"Fix-and-retest loop","target":"Tester agent run","type":"runtime","blocking":"no","mockable":"yes"},{"source":"Phase release gate","target":"team pipeline","type":"runtime","blocking":"yes","mockable":"no"},{"source":"Feature-ticket pipeline","target":"Test brief compiler","type":"runtime","blocking":"yes","mockable":"yes"},{"source":"ProofShot (GitHub repo)","target":"Tester agent run","type":"external","blocking":"yes","mockable":"no"},{"source":"herdr in-app browser","target":"Tester agent run","type":"external","blocking":"no (external Chrome is the fallback)","mockable":"no"},{"source":"Bobby (model + form rulings)","target":"Capability packaging","type":"owner","blocking":"yes","mockable":"no"}]}</script>
 <script type="module">
   import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
   const data = JSON.parse(document.getElementById("graph-data").textContent);

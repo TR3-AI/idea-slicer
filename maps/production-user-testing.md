@@ -215,7 +215,6 @@ PRODUCTION USER TESTING
 - Which external sources count as "high-ranking" for implementation-pattern research — changes what the brief compiler trusts.
 
 ## Unsorted
-- Also, if I update anything or have a new input to an idea (an idea slicer), does it immediately pick up if it can turn into a feature and then add it to the fea [#12] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - —
 
 ## Facts
