@@ -182,6 +182,7 @@ PRODUCTION USER TESTING
 - Dedicated testing agent vs the manager seat running tests itself — Bobby's workflow says "if using a dedicated testing agent", so team topology per project stays open.
 
 ## Unsorted
+- Also, if I update anything or have a new input to an idea (an idea slicer), does it immediately pick up if it can turn into a feature and then add it to the fea [#12] — arrived via GitHub, not yet sliced — run /ideaslicer to place it
 - —
 
 ## Facts
