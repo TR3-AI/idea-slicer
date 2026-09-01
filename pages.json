@@ -1,9 +1,18 @@
 [
   {
+    "file": "production-user-testing.html",
+    "title": "Production user testing",
+    "desc": "A per-phase production gate: when a phase's feature tickets and PRs land, a tester agent drives the live front end exactly like a user — inside a ProofShot recording — against a test list the manager ",
+    "date": "2026-09-01",
+    "emoji": "🧪",
+    "status": "open",
+    "issue": "#11"
+  },
+  {
     "file": "rulebook.html",
     "title": "Skill rulebook",
     "desc": "How idea-slicer works — the rules, the verified facts, and the FAQs.",
-    "date": "2026-08-31",
+    "date": "2026-09-01",
     "emoji": "📖",
     "status": "done",
     "issue": ""
