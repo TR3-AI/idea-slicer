@@ -1,6 +1,6 @@
 [
   {
-    "file": "memecoin-virality-trader-p-stack-pass.html",
+    "file": "memecoin-pstack.html",
     "title": "Memecoin virality trader — P-stack pass",
     "desc": "Same trading idea as issue #4, re-sliced through the P-stack lens: one shared Candidate record carries a coin through all three qualification gates (virality, narrative, bundler) instead of three phas",
     "date": "2026-09-06",
