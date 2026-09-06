@@ -24,6 +24,8 @@ This repo runs **idea-slicer**: GitHub issues are the ideas, `maps/<slug>.md` fi
 
 12. **P-stack below governs every slice — and it is enforceable.** A slice output is only done when it was produced under these principles and skills; an output that ignores them fails the run. Copied like-for-like from pstack v0.14.8 (`github.com/cursor/plugins/tree/main/pstack`). Do NOT use `/poteto-mode Feature` here: slices stay capabilities — no tickets, no code. Feature Map is not "part two" of Idea Slicer — they are two different skills that work together: Feature Map takes PRDs and SDDs as input, and another input format it accepts is an Idea Slicer link.
 
+13. **Use your own tools on every run.** Slicing is never a cold read of the input: the agent MUST work with (a) these rules, (b) the P-stack principles below as the decision criteria for every cut, and (c) the P-stack skills below as working tools — `/how` to understand an existing project before slicing it, `/technical-writing` and `/unslop` for all map and page prose, `multi-phase-plan` when the slice needs phasing (plan only — never execution). A run that produces output without applying them fails the run.
+
 ## P-stack principles (governing every slice)
 
 name: principle-experience-first
