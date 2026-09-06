@@ -1,5 +1,23 @@
 [
   {
+    "file": "memecoin-virality-trader-p-stack-pass.html",
+    "title": "Memecoin virality trader — P-stack pass",
+    "desc": "Same trading idea as issue #4, re-sliced through the P-stack lens: one shared Candidate record carries a coin through all three qualification gates (virality, narrative, bundler) instead of three phas",
+    "date": "2026-09-06",
+    "emoji": "🪙",
+    "status": "open",
+    "issue": "#13"
+  },
+  {
+    "file": "rulebook.html",
+    "title": "Skill rulebook",
+    "desc": "How idea-slicer works — the rules, the verified facts, and the FAQs.",
+    "date": "2026-09-06",
+    "emoji": "📖",
+    "status": "done",
+    "issue": ""
+  },
+  {
     "file": "production-user-testing.html",
     "title": "Production user testing",
     "desc": "A per-phase production gate: when a phase's feature tickets and PRs land, a tester agent drives the live front end exactly like a user — inside a ProofShot recording — against a test list the manager ",
@@ -7,15 +25,6 @@
     "emoji": "🧪",
     "status": "open",
     "issue": "#11"
-  },
-  {
-    "file": "rulebook.html",
-    "title": "Skill rulebook",
-    "desc": "How idea-slicer works — the rules, the verified facts, and the FAQs.",
-    "date": "2026-09-01",
-    "emoji": "📖",
-    "status": "done",
-    "issue": ""
   },
   {
     "file": "memecoin-virality-trader.html",
