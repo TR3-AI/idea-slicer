@@ -22,7 +22,719 @@ This repo runs **idea-slicer**: GitHub issues are the ideas, `maps/<slug>.md` fi
 10. **A repository link is a valid input.** Pasted after the command, same as pasted text: the agent must actually clone and read the repo code (`gh`/`git` into a local work dir — never guesses from the URL) and build the slice — operating flow, departments, structure — from what the code actually does: user-visible surfaces first, then the machinery behind them. A repo input means `System: existing` with the four lists (already exists / being extended / being changed / new). Code says what exists; pasted documents say what was intended — disagreements get named. Unreadable repo (private, no access): stop and say so — never fabricate a slice from a URL. Done by the agent, enforced completely: an unread repo passed off as read is mumbo-jumbo, and mumbo-jumbo fails the run.
 11. **Rules for rules (the meta-rule).** A new rule is not a rule until it is enforceable by any agent on any model. In the same turn it is decided: (1) written into EVERY synced copy — the skill's SKILL.md, the profile copies (5, him, moon — checksums must match), this AGENTS.md, and rulebook.html; (2) written as an enforceable instruction — imperative, specific, observable outcome — never a bare principle; (3) given a mechanical check where one can exist (a format the renderer parses, a grep-able page element); (4) verified active before the turn ends — profiles synced, repo pushed, live page greps pass. Models inherit rules only through these files; a rule in only some copies, or one no agent can check, does not exist.
 
-12. **P-stack principles and skills govern every slice.** Principles: **Experience First** · **Model the Domain** (slices carry domain nouns, not technical layers) · **Minimize Reader Load** (a slice reads in one pass) · **Laziness Protocol** (no speculative slices) · **Subtract Before You Add** (shrink existing slices before adding new ones) · **Foundational Thinking** (core structures before detail) · **Guard the Context Window** (bulk reading goes to subagents; the map keeps summaries) · **Exhaust the Design Space** — only when two honest cuts exist, otherwise one cut. Skills: `/technical-writing` (the page's prose standard) · `/unslop` (no filler) · `/how` (existing project, join seam only — understand before slicing) · playbook: `multi-phase-plan` (plan only — phases, never execution). Do NOT use `/poteto-mode Feature` here: slices stay capabilities — no tickets, no code.
+12. **P-stack below governs every slice** — the full P-stack principles and skills, copied like-for-like from pstack v0.14.8 (`github.com/cursor/plugins/tree/main/pstack`). No snippets, no paraphrase. Do NOT use `/poteto-mode Feature` here: slices stay capabilities — no tickets, no code.
+
+## P-stack principles (verbatim)
+
+#### `pstack/skills/principle-experience-first/SKILL.md` — verbatim
+
+---
+name: principle-experience-first
+description: "Apply when product, UX, or feature-scope tradeoffs come up. Choose user delight over implementation convenience; ship fewer polished features over more rough ones."
+disable-model-invocation: true
+---
+
+# Experience First
+
+The product is the experience. Every technical decision either helps or hurts it. When implementation convenience conflicts with user delight, choose delight.
+
+- Say no to 1,000 things (every feature, control, and option must earn its place)
+- Ship less, ship better (polished experience with three features beats rough one with ten)
+- Prototype before committing (design decisions are cheaper in throwaway HTML than production code)
+- Sweat the details (transitions, alignment, spacing, feedback, error states)
+- Tighten the core loop (every feature should serve the central workflow or get out of the way)
+
+The user is whoever consumes the work. For a UI that is the end user. For a library or an internal API it is the colleague who imports it. The engineer who maintains the code next is a user too. Weigh their experience the same way, and explain impact from their seat.
+
+Foundations should serve the experience, not the other way around. Foundational thinking governs the *sequence* of work; this principle governs the *target*.
+
+#### `pstack/skills/principle-model-the-domain/SKILL.md` — verbatim
+
+---
+name: principle-model-the-domain
+description: "Apply when writing stateful logic, or when code branches a lot or repeats a shape assumption across files. Encode the domain in a structure instead of scattered conditionals."
+disable-model-invocation: true
+---
+
+# Model the Domain
+
+Encode the real domain in a data structure instead of scattering it across conditionals.
+
+**Why:** Scattered booleans, repeated shape assumptions, and branching spread across files are accidental complexity. A structure that matches the domain makes invalid states unrepresentable and deletes branches. Choosing it at write time is cheap; recovering it later reads as a refactor and gets deferred.
+
+**Reach for structures like these:**
+
+- A state machine instead of scattered booleans, phases, or lifecycle checks.
+- A typed object/model instead of loose parameters or repeated shape assumptions.
+- A map, registry, lookup table, or discriminated union instead of branching spread across files.
+- A reducer or command/event model instead of ad hoc state mutations.
+- A module organized around one body of domain knowledge instead of a sequence such as load, validate, transform, and save. Execution order is not ownership.
+- A small module boundary that gathers repeated behavior, ownership, or invariants.
+- A queue, cache, index, graph/tree, or normalized collection where the data access pattern calls for it.
+- Any other structure that fits. The list above covers the common cases only. When none fits, work out what the code must never allow and how the data gets read, then find the structure that encodes exactly that.
+
+Do not force an abstraction. Prefer boring code if the current shape is already clear, local, and unlikely to grow. Be skeptical of an abstraction that adds indirection without removing branches, duplicated rules, invalid states, or lifecycle risk.
+
+The tell that you skipped this is a new feature that grows an existing if/else chain by one more branch, or a second boolean that must stay in sync with the first. Temporal decomposition is another tell. Phase-named modules repeat the same domain rules across steps.
+
+#### `pstack/skills/principle-minimize-reader-load/SKILL.md` — verbatim
+
+---
+name: principle-minimize-reader-load
+description: "Apply when reviewing or shaping code that's hard to trace. Count layers between question and answer, and hidden state in the reader's head; collapse one-caller wrappers and shrink mutable scope."
+disable-model-invocation: true
+---
+
+# Minimize Reader Load
+
+Maintainability is the work a reader must do to understand code. Track two axes:
+1. **Layers to trace.** How many indirections sit between the question and the answer.
+2. **State to hold.** How much hidden or mutable context the reader must keep in their head.
+
+**Why:** Code is read far more than it is written. LOC, cyclomatic complexity, and "clean architecture" are proxies. Reader load is the thing that matters. The two axes are independent. A flat file with 50 globals can be as hard to reason about as a 6-layer adapter stack. Guard both. This is the human analog of [Guard the Context Window](../principle-guard-the-context-window/SKILL.md): working memory is finite for readers too.
+
+**The pattern:**
+- **Collapse layers** that do not earn their keep: wrappers with one caller, adapters with no second implementation, indirection introduced for a future that never came. Inline them.
+- **Make adjacent layers change the abstraction.** A layer that repeats the same methods and arguments adds reader load without compression. Collapse pass-through layers.
+- **Demand interface compression.** A broad interface that hides little complexity makes readers learn both the surface and the implementation. Prefer boundaries that hide meaningful decisions.
+- **Shrink state scope:** prefer pure functions (returns over mutations), locals over fields, fields over module state, and module state over globals. Derive instead of sync.
+- **Name the invariant at the boundary,** not in every consumer, so the reader learns it once.
+- Before adding a layer or a piece of state, ask: does this reduce reader load somewhere else by at least as much?
+
+**The test:** Can a new reader answer "where does X come from?" and "what can change X?" in under 30 seconds? If not, cut layers or cut state.
+
+#### `pstack/skills/principle-laziness-protocol/SKILL.md` — verbatim
+
+---
+name: principle-laziness-protocol
+description: "Apply when refactoring, evaluating diff size, or tempted to add abstractions, layers, or signal threading. Bias toward deletion and the smallest change that solves the problem."
+disable-model-invocation: true
+---
+
+# Laziness Protocol
+
+Writing code is cheap for you, which makes over-engineering easy. Counter it by borrowing a human maintainer's fatigue. Aim for the most result with the least code and complexity.
+
+- **Prefer deletion.** When asked to refactor or improve, look for removals before additions.
+- **Maintain a flat call hierarchy.** Avoid deep call chains. A rich interface that hides substantial work is not a deep call chain. If answering a question requires tracing through more than 3 files or layers, flatten it.
+- **Consolidate decisions.** Do not repeat the same choice in several places. Put it behind one source of truth and pass the result as a simple flag.
+- **Minimize the diff.** Make the smallest change that solves the problem. Fewer lines beat "elegant" boilerplate.
+- **Question the threading.** If a task asks you to pass a new signal through types, schemas, pipelines, or similar layers, stop and look for a more direct path.
+- **Sweat the small leaks.** Remove tiny pass-throughs, representation leaks, and duplicated choices before they spread. Small leaks compound into permanent coordination costs.
+
+**Prime directive:** If a human developer would find the code exhausting to maintain, it is a bad solution. Be lazy. Stay simple.
+
+#### `pstack/skills/principle-subtract-before-you-add/SKILL.md` — verbatim
+
+---
+name: principle-subtract-before-you-add
+description: "Apply when sequencing an addition, refactor, or rewrite. Remove dead weight, redundant validators, and stub references first, then build on the simpler base."
+disable-model-invocation: true
+---
+
+# Subtract Before You Add
+
+When evolving a system, remove complexity first, then build. Deletion gives you a simpler base, which makes the next addition smaller and less brittle.
+
+**Why:** Adding to a complex system compounds complexity. Removing first cuts the surface area, reveals the essential structure, and usually makes the next design obvious. Default to subtraction.
+
+Make simplification a continual investment. Leave the design slightly simpler and more capable behind the same or smaller surface than you found it.
+
+**The pattern:**
+- Sequence removal before construction
+- Cut before you polish (get to the minimum before investing in quality)
+- Design for observed usage, not speculative edge cases
+- No speculative validators, parsers, or guards beyond what the spec demands
+- Out-of-spec features drag validators behind them. Persistence, retry-on-startup, and schema migration each need guards to defend their inputs.
+- Simplify prompts (remove redundant instructions, excessive templates)
+- When a reference has no novel content, delete it rather than leaving a stub
+
+#### `pstack/skills/principle-foundational-thinking/SKILL.md` — verbatim
+
+---
+name: principle-foundational-thinking
+description: "Apply before writing logic: choosing core types and data structures, sequencing scaffold-vs-feature work, asking what concurrent actors share. Get the data structures right so downstream code becomes obvious."
+disable-model-invocation: true
+---
+
+# Foundational Thinking
+
+**Structural decisions** protect option value. **Code-level decisions** protect simplicity. Over-engineering is often a premature decision that closes doors. The right foundational data structure keeps doors open.
+
+**Data structures first.** Get the data shape right before writing logic. The right shape makes downstream code obvious. Define core types early, trace every access pattern, and choose structures that match the dominant paths. A data-structure change late is a rewrite. Early, it is often a one-line diff.
+
+At code level, DRY the structure, not every line. Types and data models should converge. Three similar statements still beat a premature abstraction. Prefer explicit over clever. Test behavior and edge cases, not line counts.
+
+**Concurrency corollary.** Before sharing state between actors, ask "what happens if another actor modifies this concurrently?" If not "nothing", isolate.
+
+**Scaffold first.** If something helps every later phase, do it first. Ask "does every subsequent phase benefit from this existing?" CI, linting, test infrastructure, and shared types are scaffold. Sequence for option value: setup before features, tests before fixes. Keep commits small and single-purpose.
+
+Each increment should land a coherent abstraction or deepen one that exists. Do not spread a new capability across callers as special-case coordination.
+
+Subtraction comes before scaffolding: remove dead weight first, then lay foundations.
+
+#### `pstack/skills/principle-guard-the-context-window/SKILL.md` — verbatim
+
+---
+name: principle-guard-the-context-window
+description: "Apply when context is filling up: large outputs, long files, repeated reads, fan-out planning. Route bulk to subagents; keep summaries in the main thread, not raw payloads."
+disable-model-invocation: true
+---
+
+# Guard the Context Window
+
+The context window is finite and non-renewable within a session. Every token that enters should earn its place.
+
+**Why:** Context overflow degrades reasoning quality, creates compression artifacts, and halts progress. Unlike compute or time, context spent inside a session cannot be reclaimed.
+
+**Pattern:**
+- **Isolate large payloads.** Route verbose outputs, screenshots, and large documents to subagents. The main context gets summaries, not raw data.
+- **Don't read what you won't use.** Read selectively based on relevance. If a file isn't needed for the current task, skip it.
+- **Keep frequently used content inline.** Templates and references used on every invocation belong in the skill file, not in separate files that cost a read each time.
+- **Size phases and cap scope.** Limit files per phase, set turn budgets, account for mechanism costs.
+
+#### `pstack/skills/principle-exhaust-the-design-space/SKILL.md` — verbatim
+
+---
+name: principle-exhaust-the-design-space
+description: "Apply when facing a novel UI interaction or architectural decision with no precedent in the codebase. Build 2-3 competing prototypes and compare side by side before committing."
+disable-model-invocation: true
+---
+
+# Exhaust the Design Space
+
+When a novel interaction or architectural decision has no established precedent, explore several concrete alternatives before implementation. Building the wrong thing costs more than exploring three options.
+
+**The rule.** When the right answer is not obvious, build 2-3 competing prototypes or sketches. Compare them side by side. Only then commit. Design it twice is this rule by another name. A second flavor of the first shape does not count.
+
+**When it applies:**
+- Novel UI interactions (no prior art in the codebase)
+- Architectural choices with multiple viable approaches
+- Product design decisions where user experience depends on feel, not logic
+
+**When it doesn't:**
+- Mechanical implementation where the pattern is established
+- Bug fixes or refactors with a clear target state
+- Changes where constraints dictate a single viable approach
+
+
+## P-stack skills (verbatim)
+
+#### `pstack/skills/technical-writing/SKILL.md` — verbatim
+
+---
+name: technical-writing
+description: "Layered technical-writing standard: Diátaxis structure, Google developer style sentences, STE instruction rules, Global English syntax. Use for /technical-writing or when writing or reviewing docs, RFCs, readmes, PR descriptions, or commit messages."
+disable-model-invocation: true
+---
+
+# Technical writing
+
+The goal is writing a tired engineer understands on the first read. Four layers get you there, one question each: what kind of document is this, how do sentences address the reader, how much does each sentence carry, and can any sentence be read two ways. Apply all four.
+
+Three rules sit above the layers:
+
+- **Cut every word that does no work.** If the sentence survives without a word, the word goes. "In order to" is "to". "It is important to note that" is nothing.
+- **Use the short, everyday word.** "Use", not "utilize". "Help", not "facilitate". "Do", not "perform". A long word has to buy its length with precision.
+- **When a rule makes a sentence worse, fix the sentence another way or leave it alone.** The rules serve the reader. A sentence that follows every rule and sounds like a machine wrote it has failed.
+
+The codebase is the word list. Write the real symbol, file, flag, or command name, not a synonym or a description of it.
+
+Don't invent jargon. Use the words a developer would say out loud: "move", "delete", "a budget that only decreases", not "evacuate", "ratchet", or "endgame". A named pattern is fine when the doc says what it means the first time. Add new offenders to `unslop`'s abstract-metaphor rule with their replacement.
+
+## Vary the rhythm
+
+The layers decide what a document says and how much each sentence carries. A doc can obey all of them and still read machine-written: every sentence clipped short, no view anywhere, nothing specific.
+
+- Mix sentence lengths on purpose. Short sentences land a point. Longer ones that take their time carry a fact with its condition or consequence.
+- One thought per sentence does not mean one length per sentence. Split the sentence that carries two thoughts. Keep the long sentence that carries one.
+- Have a view where the mode allows it. Explanation weighs trade-offs, so say what you make of them instead of listing pros and cons. Reference stays dry.
+- Be specific over sterile. Not "schema changes can cause issues" but "a column rename fails the build".
+
+## Pick the mode first (Diátaxis)
+
+One document, one mode. Two questions pick it: does the content inform action (doing) or understanding (thinking), and does it serve learning or work?
+
+- Action + learning: **tutorial**.
+- Action + work: **how-to**.
+- Understanding + work: **reference**.
+- Understanding + learning: **explanation**.
+
+Use the compass on a whole document or on one sentence. Reach for it whenever you feel unsure what you are writing. Gut feel is often wrong here.
+
+**Tutorial: learning by doing.** You are the teacher. The learner's success is your job, not theirs. Open by saying what the learner will build, not what they will "learn". Every step produces a visible result, early and often. Tell them what they should see: the expected output, the prompt change, the log line. Cut explanation to one clause and a link. Teaching pauses break the lesson. Stay concrete. Write as "we", in commands: "First, do x. Now, do y."
+
+**How-to: steps to a goal.** Solve a problem a person has, not an operation the machine can perform. Assume competence. Skip teaching. Action only: no digressions, no background, no completeness for its own sake. Link those instead. Allow forks and judgment: "If you want x, do y." Name the guide by the task: "How to calibrate the radar array", not "Radar array calibration".
+
+**Reference: facts for lookup.** Describe. Only describe. No instruction, no persuasion, no opinion. Be dry, complete, and sure: state facts, options, limits, and errors with no hedging. Mirror the structure of the thing described, so code and docs can be navigated together. Put material where readers expect it. Generate from code where possible, so it stays true.
+
+**Explanation: understanding and why.** One bounded topic, readable away from the product. Each title should tolerate an implicit "About..." in front. Anchor on a real why question. Give context: design decisions, history, constraints, alternatives. Opinion is allowed here and nowhere else.
+
+Don't mix modes: no reference tables inside a tutorial, no tutorial hand-holding inside reference, no arguing inside a how-to. Split and link instead.
+
+Source: diataxis.fr, fetched 2026-07-18.
+
+## Write sentences to the reader (Google developer style)
+
+- Talk to the reader as "you", in the present tense. "Will" only for things that genuinely happen later.
+- Say who does what: "the compiler checks", not "is checked". Passive is fine only when the actor is unknown or beside the point.
+- Write instructions as commands: "Click Submit." State facts plainly. Never "should be done".
+- Put the condition before the instruction: "To delete the document, click Delete." The reader skips what does not apply.
+- Put the common case first. Exceptions after.
+- Sound like a knowledgeable friend. No buzzwords, no figurative language, no "please" in instructions, and never "simply", "easy", or "quickly" in a procedure. If it were simple, the reader would not be here.
+- Don't pre-announce ("we will soon support...") and don't start consecutive sentences with the same phrase.
+- Read the awkward sentence aloud. If it stays awkward, rewrite it.
+- Link with words that say where the link goes: the page title or a short description. Never "click here". Prefer a sentence of context on the page over a link off it.
+- Headings carry the point, not just the topic ("Pick the mode first", not "Modes"). Sentence case. A task heading is a bare verb phrase ("Create an instance"). A concept heading is a noun phrase. One h1 per page, no skipped levels.
+- Numbered lists for sequences, bullets for everything else. Introduce a list with a complete sentence. Keep items parallel.
+- Code goes in code font. UI elements go in bold. Use serial commas. Drop "etc." and say up front that a list is partial.
+
+Source: developers.google.com/style, fetched 2026-07-18.
+
+## Make statements load one at a time (STE rules)
+
+- One instruction per sentence. One thought per sentence everywhere else.
+- Split instructions longer than about 20 words and other sentences longer than about 25.
+- Put the warning or condition before the step it guards: "If hot oil touches your skin, injuries can occur."
+- Keep "the" and "a": "Remove backup file" reads two ways. "Remove the backup file" reads one.
+- Give each word one meaning and one job, then keep it. If "check" means inspect, don't also use it for restrain.
+- Pick one word per action and stick to it: "start", not "start" here and "initiate" there.
+- Write procedures as direct commands, never as narration and never in the passive: "Install the component", not "the component must be installed".
+- Avoid "-ing" words where you can. They take too many grammatical jobs and breed misreadings.
+
+Source: asd-ste100.org (Issue 9, 2025), fetched 2026-07-18. The numbered rules and dictionary live in the spec PDF. The principles above are the transferable core.
+
+## Leave no sentence open to two readings (Global English)
+
+- Keep words like "only" and "not" next to the word they change: "only fails on growth" and "fails only on growth" say different things.
+- Break up long noun strings: "the proto import budget check script" becomes "the script that checks the proto-import budget".
+- Make every "it", "they", and "this" point at one obvious thing. Repeat the noun when in doubt. Never use "this" or "which" to point at a whole clause.
+- Don't drop verbs: "Phase 1 moves the converters and Phase 2 the runtime" leaves Phase 2 without one. Give it one.
+- Keep the small words that show structure. "Ensure that the switch is off" keeps "that" because it makes the sentence parse one way. Never trade clarity for word count.
+- Repeat the article in a series when it prevents a misread: "the client and the host", not "the client and host", when they are two things.
+- Say which parts "and" or "or" joins when a sentence can group two ways. "Both...and", "either...or", and "if...then" are free disambiguators.
+- Use periods, not semicolons. Replace an em dash with a new sentence.
+- Make text in parentheses a full grammatical unit or its own sentence. Never form plurals with "(s)".
+- No slashes: write "a, b, or both" instead of "a/b" or "and/or".
+- Call each thing by one name, everywhere. A doc that says "the gate", "the ratchet", and "the budget check" for one thing teaches three things. Rewording an unchanged sentence between edits costs the same way: don't churn what didn't change.
+- Skip idioms, colloquialisms, Latin abbreviations, and metaphors. A non-native reader, a translator, and an agent all parse plain constructions best.
+
+Source: Kohl, The Global English Style Guide (SAS Press). Guideline text fetched from the Internet Archive and the SAS sample chapter, 2026-07-18.
+
+## Voice and repo specifics
+
+- Apply the **unslop** skill to every doc this skill touches. That skill owns the slop-pattern catalog: AI vocabulary, filler, hedging, formatting tells.
+- PR descriptions and commit messages are writing too. Every layer except Diátaxis applies to them.
+- Product UI strings are not documentation. Use your product's copy guidelines for those.
+- Indent code snippets with tabs. Write real paths and real symbols. Make every count or tree claim true at the commit that lands it, and include the command that regenerates it.
+
+## Worked example
+
+Before:
+
+> Configuration of the proto import ratchet budget script parameters is performed via budget.json. Note that it's important to remember that running with --write, which updates the committed budget to reflect the current count, should only be done when lowering it. If exceeded, CI fails.
+
+After:
+
+> `budget.mjs` reads the committed budget from `budget.json` and counts the files that import protos. If the count exceeds the budget, CI fails. Run `budget.mjs --write` only to lower the budget.
+
+The fixes, by layer: "configuration is performed" becomes "`budget.mjs` reads", so someone does something (Google). "Ratchet" goes away. The script's real filename does the naming (jargon rule). The five-noun string breaks up into plain clauses (Global English). The hedge "note that it's important to remember" is deleted (cut every word that does no work). The failure condition moves ahead of the step it explains (STE). The buried "should only be done when lowering" becomes a command with "only" next to its verb (STE). "If exceeded" gets a subject: the count (Global English).
+
+## Review checklist
+
+Apply to any prose this skill covers. Item 1 applies only to document sets:
+
+1. Is each file one Diátaxis mode, with links where modes meet?
+2. Is every instruction written as a command, with its condition in front?
+3. Does any sentence carry two instructions or two thoughts? Split it.
+4. Can any word be cut without losing meaning? Cut it.
+5. Is "only" next to the word it changes? Does every "it" point at one thing? Does every clause keep its verb?
+6. Does each thing have exactly one name across the docs?
+7. Would a developer say these words out loud? Replace invented metaphors and fancy synonyms with the plain word or the real symbol name.
+8. Are all symbols, paths, and counts real at this commit, with the commands that regenerate the counts?
+
+#### `pstack/skills/unslop/SKILL.md` — verbatim
+
+---
+name: unslop
+description: Cut AI tells from any writing. Must always apply.
+disable-model-invocation: true
+---
+
+# Unslop
+
+Edit text to remove AI patterns and add human voice.
+
+## Process
+
+1. Scan for the patterns below.
+2. Rewrite. Preserve meaning, match intended tone.
+3. Add soul (see next section).
+4. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
+
+## Adding soul
+
+Removing patterns is half the job. Sterile, voiceless writing is just as obvious.
+
+- **Have opinions.** React to facts instead of neutrally listing pros and cons.
+- **Vary rhythm.** Short sentences. Then longer ones that take their time. Mix it up.
+- **Acknowledge complexity.** "Impressive but also kind of unsettling" beats "impressive."
+- **Use "I" when it fits.** First person isn't unprofessional.
+- **Let some mess in.** Perfect structure looks machine-made.
+- **Be specific.** Not "this is concerning" but "there's something unsettling about agents churning away at 3am."
+
+## Patterns to detect and fix
+
+### Content
+
+1. **Puffery.** "pivotal moment", "testament to", "evolving landscape", "setting the stage for", "indelible mark", "deeply rooted". Cut puffery, state what happened.
+2. **Name-dropping.** Listing media outlets without context. Pick one, say what was said.
+3. **Superficial -ing phrases.** "highlighting...", "ensuring...", "reflecting...", "showcasing...", "fostering...". Delete or expand with real sources.
+4. **Promotional language.** "nestled", "vibrant", "breathtaking", "groundbreaking", "renowned", "stunning", "must-visit". Use neutral descriptions.
+5. **Vague attributions.** "Experts believe", "Industry reports suggest", "Some critics argue". Name the source or delete.
+6. **Formulaic challenges.** "Despite challenges... continues to thrive." Replace with specific facts.
+
+### Language
+
+7. **AI vocabulary.** Additionally, crucial, delve, enduring, enhance, fostering, garner, interplay, intricate, landscape (abstract), pivotal, showcase, tapestry (abstract), testament, underscore, vibrant. Replace with plain words.
+8. **Fancy ways to say "is".** "serves as", "stands as", "boasts", "features". Just say "is" or "has".
+9. **"Not just X, but Y."** State the point directly instead.
+10. **Rule of three.** Forcing ideas into groups of three. Use the natural number.
+11. **Synonym cycling.** Protagonist, main character, central figure, hero all in one paragraph. Pick one, repeat it.
+12. **False ranges.** "from X to Y" where X and Y aren't on a meaningful scale. List topics directly.
+
+### Style
+
+13. **Em dash overuse.** Avoid em dashes entirely. Use periods or commas only (no parentheses, no en dashes, no hyphen-as-dash substitutes). Em dashes are an AI tell, and reaching for parentheses instead just trades one tell for another. If a thought needs separation, end the sentence or use a comma.
+14. **Colon overuse.** Colons are fine before a list or example. Not as mid-sentence connectors. "If you're coming from traditional automation: instead of registering event handlers, you describe conditions" adds nothing with the colon. Rewrite to let the point stand on its own without comparison framing. "Describing when the scheduler should fire works best as plain English." Same meaning, no crutch punctuation.
+15. **Boldface overuse.** Don't bold every proper noun or acronym.
+16. **Inline-header lists.** The tell is a bold label and colon that restates the line: "**Performance:** Performance improved...". Convert those to prose. A bold lead-in that ends in a period, names the item, and is followed by genuinely new detail ("**Schema in TypeScript.** Tables live in one file.") is fine, not a tell.
+17. **Title case headings.** Use sentence case.
+18. **Decorative emojis.** Remove from headings and bullets.
+19. **Curly quotes.** Replace with straight quotes.
+
+### Communication artifacts
+
+20. **Chatbot phrases.** "I hope this helps!", "Let me know if...", "Of course!", "Certainly!", "Found the smoking gun!" Remove.
+21. **Cutoff disclaimers.** "While specific details are limited..." Find sources or remove.
+22. **Sycophantic tone.** "Great question! You're absolutely right!" Respond directly.
+
+### Filler
+
+23. **Filler phrases.** "In order to" becomes "To". "Due to the fact that" becomes "Because". "It is important to note that" gets deleted.
+24. **Excessive hedging.** "could potentially possibly be argued that it might" becomes "may".
+25. **Generic conclusions.** "The future looks bright." State specific plans or facts.
+
+### Jargon
+
+26. **Abstract metaphor nouns.** Substrate, wedge, vector, locus, vantage, nexus, primitive (as noun), harness (as metaphor), surface (as in "API surface"), bedrock, scaffolding (as metaphor), modality, paradigm, gold-plating, ratchet (as metaphor), evacuate (for moving code), endgame, north star, flywheel. These read as technical but usually have a plainer concrete word. "Substrate" becomes "base". "Wedge in" becomes "add". "Vector" becomes "way" or "method". "Gold-plating" becomes "more than the job needs". "Ratchet" becomes the mechanism's real name or "a limit that only tightens". "Evacuate" becomes "move out". "Endgame" becomes "the last phase". Pick the concrete word.
+
+### Plain speech
+
+27. **Say what it does, not how it feels.** "the database stays close at hand", "SQL you can read", "types that follow your schema" name a feeling. The fix names the mechanism or a number: "`.toSQL()` returns the exact string sent to the database", "a column rename fails the build". Ask what the sentence tells the reader to do or know, then write that. If you can't restate it as a concrete instruction, fact, or number, cut it. One more check: if the sentence could appear unchanged in another project's docs, it says nothing about this one. Cut it.
+28. **Shorten or split dense sentences.** If the reader has to backtrack to parse a sentence, break it in two or drop clauses. One idea per sentence.
+29. **Active voice.** Prefer it. Catch "is/are/was/were + past participle" and name the actor: "queries are validated" becomes "the compiler validates queries", "the file is parsed by the loader" becomes "the loader parses the file". Passive is fine only when the actor is unknown or genuinely doesn't matter.
+30. **Cut adverbs, or use a stronger verb.** "runs quickly" becomes "is fast" or the number. "significantly improves" becomes the measured delta. An adverb propping up a weak verb means the verb is wrong.
+31. **Prefer the plain word.** "utilize" becomes "use", "leverage" becomes "use", "facilitate" becomes "help", "numerous" becomes "many", "in the event that" becomes "if". The fancier synonym is rarely clearer.
+
+#### `pstack/skills/how/SKILL.md` — verbatim
+
+---
+name: how
+description: "Use for \"how does X work\", code walkthroughs before changing something, and placement / ownership / layering questions (\"where should this live\", \"which package owns this\", \"is this the right layer\"). Explains subsystem architecture, runtime flow, onboarding mental models. Can critique architecture. Use why for motivation."
+disable-model-invocation: true
+---
+
+# How
+
+Explore the codebase to answer "how does X work?" questions. Produce clear architectural explanations at the level of a senior engineer onboarding onto a subsystem. Enough to build a working mental model, not annotated source code.
+
+Two modes:
+
+1. **Explain** (default). Explore the codebase and produce a clear explanation
+2. **Critique.** Explain first, then spawn multiple models to independently identify architectural issues
+
+## Explain Mode
+
+### Step 1. Understand the Question and Assess Complexity
+
+Parse what the user is asking about:
+
+- "How does the rate limiter work?", a subsystem
+- "How do we handle billing for on-demand usage?", a feature flow
+- "How is the auth service structured?", an architectural overview
+- "Walk me through what happens when a user submits a form", a runtime trace
+
+Identify the scope. If ambiguous, state your best-guess interpretation before exploring. Don't ask. Let the user redirect if you're off.
+
+**Assess complexity to decide the approach:**
+
+- **Simple** (a single module, a small utility, a narrow question like "how does function X work"): skip explorer agents; the explainer explores and explains in a single pass. Go to Step 2b.
+- **Complex** (a subsystem spanning multiple files/services, a cross-cutting feature, a full architectural overview): spawn parallel explorer agents first, then hand off to the explainer. Go to Step 2a.
+
+When in doubt, lean simple. You can always spawn explorers if the explainer hits a wall.
+
+### Step 2a. Explore (complex questions only)
+
+Decompose the question into 2-4 parallel exploration angles, each a distinct slice of the subsystem so explorers don't duplicate work. Example split for "how does the rate limiter work?":
+
+- Explorer 1: data model and state management
+- Explorer 2: request path and enforcement
+- Explorer 3: configuration and metrics infrastructure
+
+The right decomposition depends on the question. Use your judgment. Narrow questions: 2 explorers is fine. Broad subsystems: up to 4.
+
+Spawn all explorers in a single message:
+
+- `subagent_type`: `generalPurpose`
+- `model`: your configured how-explorer model (default `grok-4.6-fast-xhigh`)
+- `readonly`: `true`
+
+Each explorer gets the same base prompt from `references/explorer-prompt.md` plus a specific exploration angle naming its slice. Each explorer should:
+- Start broad: Glob for relevant directories, Grep for key types/interfaces/class names
+- Follow the thread: from an entry point, trace the call chain (callers, callees, data flow, type definitions)
+- Read the actual code, don't guess from file names
+- Stop when it can describe the full path from input to output (or trigger to effect) without hand-waving any step
+- Note things that are surprising, non-obvious, or that a newcomer would get wrong
+
+Each explorer returns structured findings: components found, flow traced, files read, anything non-obvious. Overlap between explorers is fine; the explainer reconciles.
+
+Then proceed to Step 3.
+
+### Step 2b. Direct Explain (simple questions)
+
+Spawn a single Task subagent that explores and explains in one pass:
+
+- `subagent_type`: `generalPurpose`
+- `model`: your configured how-explainer model (default `claude-fable-5-1-thinking-max`)
+- `readonly`: `true`
+
+The agent does its own exploration (Glob, Grep, Read) and writes the explanation directly. Read `references/explainer-prompt.md` for the communication style and output format. Same structure, just no explorer findings as input.
+
+Proceed to Step 4.
+
+### Step 3. Synthesize (complex questions only)
+
+Once all explorers return, spawn a single Task subagent to synthesize their findings into one coherent explanation:
+
+- `subagent_type`: `generalPurpose`
+- `model`: your configured how-explainer model (default `claude-fable-5-1-thinking-max`)
+- `readonly`: `true`
+
+The explainer gets all explorers' findings and writes the human-facing explanation (output format below). Read `references/explainer-prompt.md` for the full prompt template. The explainer reconciles overlapping findings, resolves contradictions, and weaves the slices into a unified picture.
+
+### Step 4. Present
+
+Present the explainer's output to the user. You may lightly edit for clarity or add context from the conversation, but don't substantially rewrite. The explainer's communication is the product.
+
+### Output Format
+
+Follow this structure, adapted to the question. Not every section is needed for every question.
+
+**Overview.** 1-2 paragraphs. What it is, what it does, why it exists. Enough to decide whether to keep reading.
+
+**Key Concepts.** The important types, services, or abstractions. Brief definition of each. Not exhaustive, just the ones needed to understand the rest.
+
+**How It Works.** The core of the explanation. Walk through the flow: what triggers it, what happens step by step, where data goes, the decision points. Prose, not pseudocode. Reference specific files and functions so the reader can go look, but don't dump code blocks unless a snippet is genuinely necessary.
+
+**Where Things Live.** A brief map of the relevant files/directories. Not every file, just the ones needed to start working in this area.
+
+**Gotchas.** Non-obvious or surprising things that would trip someone up. Historical context that explains why something looks weird. Known sharp edges.
+
+## Critique Mode
+
+Triggered when the user asks for architectural issues, problems, or improvements, not just understanding.
+
+### Step 1. Explain First
+
+Run the full explain flow above (Steps 1-4). You must understand the architecture before critiquing it.
+
+### Step 2. Spawn Critics
+
+After the explanation is complete, spawn one architectural critic per model in your configured how-critics list (defaults `claude-fable-5-1-thinking-max`, `gpt-5.6-sol-max`, `grok-4.6-fast-xhigh`, `claude-opus-5-thinking-xhigh`), all in a single message.
+
+For each critic:
+- `subagent_type`: `generalPurpose`
+- `model`: one model from the configured how-critics list. These are minimum reasoning levels. The lead should escalate any model when the architecture warrants deeper analysis.
+- `readonly`: `true`
+
+Read `references/critic-prompt.md` for the prompt template. Each critic gets:
+1. The explanation from Step 1 (so they don't re-explore)
+2. The relevant file paths (so they can read the actual code)
+3. The architectural critique rubric from `references/critique-rubric.md`
+
+### Step 3. Lead Judgment
+
+Same framework as the interrogate skill. You're a pragmatic lead, not an aggregator.
+
+Categorize findings:
+- **Act on.** Architectural problems worth fixing now
+- **Consider.** Real concerns, but the cost/benefit is unclear
+- **Noted.** Valid observations, low priority
+- **Dismissed.** Wrong, missing context, or style preference
+
+Present the explanation first (from Step 1), then the critique verdict below it. The explanation should stand on its own; someone who just wants to understand the system shouldn't wade through critique.
+
+#### `pstack/skills/poteto-mode/playbooks/multi-phase-plan.md` — verbatim
+
+### Multi-phase or multi-PR plan
+
+**You own the plan, not the code. The plan is a checklist an owner runs box by box and the operator audits from the evidence.** For work that spans phases or stacked PRs. The plan is the deliverable. Do not implement.
+
+1. When the change is one or two files with an obvious approach, skip the plan. Say so and stop.
+2. Settle open questions by prototype before you write. For a question about layout, timing, behavior, or whether an API works, run `playbooks/prototype.md`. Keep the branch, the SHA, and the screenshots for Appendix A. Ask the operator only about a product or preference call that no run can settle. Give options (the **never-block-on-the-human** principle skill).
+3. Explore in subagents with `subagent_type: "poteto-agent"` and an explicit model per the Subagents section (the **guard-the-context-window** principle skill). Each returns file pointers, conventions, test commands, and entry points. No inlined dumps.
+4. Copy the skeleton below into the plan file and fill every placeholder. Unless the operator names a path, write the file under the agent store's `docs/`. Keep every heading and every sub-block in the order shown. One section per PR. One PR is one change with its own evidence (the **sequence-verifiable-units** principle skill). Name the execution playbook in **How to read this**. Pick between `playbooks/autopilot-full.md` and `playbooks/autopilot-stack.md` per the rule at the end of `playbooks/autopilot-stack.md`. A standing program takes `playbooks/orchestrate.md`.
+5. Write under `/technical-writing` in full, then `/unslop`. The body is one Diátaxis mode, how-to. Appendices hold explanation and reference. Two rules apply verbatim. "i dont want any abstract metaphors" and "write like hemingway". Each heading states the task or the finding. No long dashes. No mid-sentence colons.
+6. Run `node pstack/skills/poteto-mode/scripts/check-plan.mjs <plan.md>` and fix every line it prints (the **encode-lessons-in-structure** principle skill). It enforces the skeleton's shape, the verification rule in every verification block, and the punctuation rules.
+7. Hand back. Post the plan path and the script's output, then stop. Execution starts on the operator's explicit go, under the execution playbook the plan names.
+
+**Verification.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked (the **prove-it-works** principle skill). That sentence is the verification rule. Every verification block opens with it. The live block is mandatory. Ten lanes on `grok-4.6-fast-xhigh` at the PR head drive the real surface through its control skill, per the **swarm** skill. Each lane is one box with a concrete scenario, the screenshot it saves, and its pass predicate. One lane is the **Regression lane against trunk.** It runs the same load-bearing scenario on trunk and head. If trunk does not have the feature, the lane records that fact and gates the behavior the diff adds plus the end state the user waits for instead of inventing a trunk result. The perf gate is dual-sided: trunk and head must both produce the named metric. If trunk lacks the feature, also isolate the work the diff adds and set an absolute budget for that work plus the end-to-end state the user waits for; do not claim a ratio between unlike scenarios. The perf block names the metric, the interleaved probe, the trunk baseline measured first, and the rule with the number that fails. A PR that changes an interaction is review-gated. The operator reviews it in chat with screenshots and a video before merge. A PR that changes no interaction writes `**Review gate.** None. <PR id> is not review-gated.` and no boxes under it.
+
+**Control skill.** Pick it by surface. Browser, Electron, and web UIs use `control-ui` from `cursor-team-kit`. CLIs and TUIs use `control-cli` from `cursor-team-kit`. Native mobile uses whatever simulator-driving skill the repo has. A PR that touches two surfaces gets lanes on both. A surface with no control skill is a risk in Appendix C, and its live block still names how each lane drives it.
+
+````markdown
+# <Program> plan
+
+<Under ten lines. What changes, for whom, the rule the program enforces, and the PR ids in order.>
+
+## How to read this
+
+One box is one unit of work. Every box names the evidence that checks it. A nested box is a sub-step of the box above it. Check a box only when its evidence exists, a file, a log line, a screenshot, a test run, or a SHA. The body is a how-to. The appendices explain and record.
+
+The program runs `pstack/skills/poteto-mode/playbooks/<execution playbook>.md`. <Who merges, and which PR ids are the operator's items that stop at merge-ready.>
+
+Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+## Program checklist
+
+### Arm the program
+
+- [ ] State the protocol and this plan to the operator, then stop. Start execution only on her explicit go.
+- [ ] On her go, arm a `/goal` with this exact text. "<The plan path, the PR ids in order, the verification rule, who merges, and the done condition.>"
+- [ ] Read these from trunk at program start. Re-read them at every tick.
+  - [ ] `git show origin/main:pstack/skills/poteto-mode/playbooks/<execution playbook>.md`
+  - [ ] `git show origin/main:pstack/skills/swarm/SKILL.md`
+  - [ ] `git show origin/main:<control skill path>`
+  - [ ] `git show origin/main:pstack/skills/poteto-mode/playbooks/opening-a-pr.md`
+  - [ ] `git show origin/main:pstack/skills/<each other leaf skill the program uses>`
+- [ ] Arm the 30-minute audit tick. In a local session, a real terminal `/loop`. In a cloud root, a cloud-sleeper wake chain. Never leave the cadence to memory.
+- [ ] Use this tick prompt, verbatim. "Re-read the execution playbook from trunk and the armed /goal. Audit the operation against both and fix drift in this tick. Probe every active lane and judge progress by side effects only. Stand down a stuck lane and dispatch its replacement now. Then send the operator a status message, whether or not anything changed, with the queue table of PR, owner, state, and head SHA, the verdicts since the last tick, what merged, open operator gates, and blockers."
+- [ ] On the operator's hold or stand-down, send every owner a zero-writes order at once.
+
+### Spawn owners
+
+- [ ] Spawn one owner per PR with the full lifecycle the execution playbook names.
+- [ ] Follow this dependency graph. Start dependent work only after its parent merges, or base it on the parent branch when the execution playbook stacks.
+  - [ ] <PR id> and <PR id> are independent and first. Both branch from `main`.
+  - [ ] <PR id> after <PR id>.
+- [ ] Hold the file boundaries. <PR id or class> touches only `<glob>`.
+- [ ] Hold the review gate. <PR ids> change an interaction. They wait for the operator's review in chat with screenshots and a video before merge.
+
+### PR mechanics, for every PR
+
+- [ ] Resolve the forge once. Default to `gh`; if `command -v origin` succeeds and Origin can resolve the repository, use `origin pr` for every PR operation. Record any fallback to `gh`. Never require `gt`.
+- [ ] Open the PR ready, never draft, with `origin pr create --status open --base <base-branch>` or `gh pr create --base <base-branch>` according to the resolved forge. A stack child targets its parent branch.
+- [ ] Run the repo's lint and typecheck once before the PR-facing push. Push with hooks on.
+- [ ] Run `/deslop` before each commit and `/no-comments` before review.
+- [ ] Triage every Bugbot and security-reviewer comment per `../references/bugbot-triage.md`.
+- [ ] Rebase onto current trunk before babysit and again before the merge-ready report.
+
+### Verdict and merge, for every PR
+
+- [ ] At the merge-ready head SHA, run the swarm per `pstack/skills/swarm/SKILL.md`. One gates lane. The ten live lanes from the PR's **Verify, live** block. The perf lane from its **Verify, perf** block. One audit lane that reads the diff and the receipts and distrusts the PR body.
+- [ ] Clean only when every lane is `PASS`. Findings go back to the owner. A new head gets a fresh swarm and a fresh verdict.
+- [ ] <The merge or append rule from the execution playbook, with the patch-id rule from `playbooks/shipping.md`.>
+
+### Boot recipe, for every live lane
+
+Each live lane runs on its own cloud VM at the PR head. Drive through `control-ui` or `control-cli` from `cursor-team-kit`.
+
+- [ ] `git fetch origin <head-branch> && git checkout <head SHA>`.
+- [ ] <Start the backend and the surface. Wait for ready.>
+- [ ] <Deliver input only through the control skill's commands. Name the read-only diagnostics.>
+- [ ] Save every screenshot to `/tmp/swarm-<pr-id>/worker-<n>/<slug>.png` and return the paths with the report.
+
+## <Task as a verb phrase> (<PR id>)
+
+**Depends on.** <PR id, or None.>
+
+**Files.**
+
+- [ ] Edit `<path>`.
+- [ ] Create `<path>`.
+- [ ] Delete `<path>`.
+
+**Build.**
+
+- [ ] <One change. Name the symbol and the file.>
+
+**You see.**
+
+- [ ] <One observable result, with the exact log line or screen state.>
+
+**Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+- [ ] <Test file and the case it gains.> Run `<command>`.
+
+**Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on `grok-4.6-fast-xhigh` at the PR head, per the boot recipe.
+
+- [ ] Lane 1. Regression lane against trunk. Run <the same load-bearing scenario> at trunk and head. If trunk lacks the feature, record that and gate <the behavior the diff adds plus the end state the user waits for>. Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 2. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 3. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 4. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 5. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 6. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 7. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 8. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 9. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+- [ ] Lane 10. <Scenario.> Save `<slug>.png`. Pass when <predicate>.
+
+**Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
+
+- [ ] Metric. <What is measured at both trunk and head. If trunk lacks the feature, also name the diff-added work and the end-to-end state the user waits for.>
+- [ ] Probe. <The command or procedure, run at trunk and at the head, interleaved. Both sides must produce the metric.>
+- [ ] Baseline. Record the trunk <value> first.
+- [ ] Rule. <Head against trunk, with the number that fails. If the scenarios differ, add absolute budgets for the diff-added work and the user-visible end state instead of an invalid ratio.>
+
+**Review gate.** The operator reviews before merge.
+
+- [ ] Copy lane <n> screenshots into `<media path>/<pr-id>-review-<slug>.png`.
+- [ ] Record a 30 to 60 second video of the change on a lane VM. Save it as `<media path>/<pr-id>-review.mp4`.
+- [ ] Post the screenshots and the video in chat. Stop at merge-ready. Wait for the operator's click.
+
+**Merge.**
+
+- [ ] Root's clean verdict at the exact head SHA.
+- [ ] Bugbot triage done.
+- [ ] Rebased onto current trunk after the verdict, patch-id unchanged.
+- [ ] <The owner squash-merges its own PR, or the root appends it to the base-branch stack and the operator lands it bottom-up.>
+
+## Close the program
+
+- [ ] Every box above is checked with its evidence.
+- [ ] Reply to the operator with the report the execution playbook names.
+
+## Appendix A. Prototype evidence
+
+<Each open question a prototype answered, with the branch, the SHA, and the artifact links. Each question that stays unproven.>
+
+## Appendix B. Alternatives rejected
+
+<Each approach weighed and why it lost.>
+
+## Appendix C. Risks
+
+<Each risk with the PR it lands in and what the owner watches.>
+
+## Appendix D. Links and reading list
+
+<Docs to read before editing. Which PRs get `pstack/skills/how/SKILL.md` and `pstack/skills/interrogate/SKILL.md`. The trail per `pstack/skills/show-me-your-work/SKILL.md`.>
+````
+
+**Reply:** the plan path, the PR ids with their dependencies and the review-gated set, what the prototypes proved and what stays unproven, and the check script's output.
+
+
 
 ## Facts — verified truths about how this system behaves
 
